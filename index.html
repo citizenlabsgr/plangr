@@ -12,7 +12,7 @@
 
 
       <div class="space-y-4">
-        <!-- Step 1: Destination -->
+      <!-- Step 1: Destination -->
         <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
           <h2 class="font-semibold text-lg">Where are you going?</h2>
           <p class="text-sm text-slate-600 mt-1 italic">
@@ -79,7 +79,7 @@
             <div class="flex items-center justify-between">
               <label class="text-sm font-medium">Willing to arrive late</label>
               <span class="text-sm text-slate-600">
-                <span id="lateValue">0</span> min
+                <span id="lateValue">+0</span> min
               </span>
             </div>
             <input
@@ -91,10 +91,10 @@
               value="0"
               class="w-full mt-2"
             />
-          </div>
-        </section>
+        </div>
+      </section>
 
-        <!-- Step 2: Mode + People -->
+      <!-- Step 2: Mode + People -->
         <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
           <h2 class="font-semibold text-lg">How are you leaving home?</h2>
 
@@ -142,10 +142,10 @@
             >
               +
             </button>
-          </div>
-        </section>
+        </div>
+      </section>
 
-        <!-- Step 3: Sliders -->
+      <!-- Step 3: Sliders -->
         <section id="preferencesSection" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
           <h2 class="font-semibold text-lg">Preferences</h2>
           <p class="text-sm text-slate-600 mt-1">
@@ -155,7 +155,7 @@
           <!-- Walk distance -->
           <div id="walkBlock" class="mt-4">
             <div class="flex items-center justify-between">
-              <label class="text-sm font-medium">Willing to walk</label>
+              <label class="text-sm font-medium">Willing to walk to destination</label>
               <span class="text-sm text-slate-600">
                 <span id="walkValue">0.5</span><span id="walkUnit"> miles</span>
               </span>
@@ -192,9 +192,9 @@
           <!-- Cost -->
           <div class="mt-4">
             <div class="flex items-center justify-between">
-              <label class="text-sm font-medium">Willing to pay</label>
+              <label id="costLabel" class="text-sm font-medium">Willing to pay</label>
               <span class="text-sm text-slate-600">
-                <span id="costPrefix">$</span><span id="costValue">20</span>
+                <span id="costPrefix">$</span><span id="costValue">1.75</span>
               </span>
             </div>
             <input
@@ -202,14 +202,14 @@
               type="range"
               min="0"
               max="50"
-              value="20"
-              step="1"
+              value="1.75"
+              step="0.25"
               class="w-full mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
             />
-          </div>
-        </section>
+        </div>
+      </section>
 
-        <!-- Step 4: Results -->
+      <!-- Step 4: Results -->
         <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
           <h2 class="font-semibold text-lg">Try this instead</h2>
           <p class="text-sm text-slate-600 mt-1">
@@ -218,7 +218,7 @@
 
           <div id="results" class="mt-4 space-y-3"></div>
         </section>
-      </div>
+        </div>
     </main>
 
     <script>
@@ -282,29 +282,84 @@
         people: 1,
         walkMiles: 0.5,
         parkingMins: 10,
-        costDollars: 20,
+        costDollars: 1.75,
       };
 
       // Valid modes
       const validModes = ["drive", "rideshare", "transit", "bike", "micromobility", "walk"];
 
-      // Read mode from URL fragment
-      function getModeFromFragment() {
-        const hash = window.location.hash.slice(1); // Remove the #
-        if (hash && validModes.includes(hash)) {
-          return hash;
-        }
-        return null;
+      // Track if day/time/people have been changed from defaults
+      let dayChanged = false;
+      let timeChanged = false;
+      let peopleChanged = false;
+
+      // Convert time from HH:MM to HHMM for URL (avoids %3A encoding)
+      function timeToUrl(time) {
+        return time.replace(':', '');
       }
 
-      // Update URL fragment with current mode
+      // Convert time from HHMM to HH:MM from URL
+      function timeFromUrl(urlTime) {
+        if (urlTime.length === 4) {
+          return urlTime.slice(0, 2) + ':' + urlTime.slice(2);
+        }
+        return urlTime; // Fallback if already in HH:MM format
+      }
+
+      // Parse URL fragment (format: #mode=drive&day=today&time=1800&people=2)
+      function parseFragment() {
+        const hash = window.location.hash.slice(1); // Remove the #
+        if (!hash) return {};
+        
+        const params = {};
+        hash.split('&').forEach(param => {
+          const [key, value] = param.split('=');
+          if (key && value) {
+            if (key === 'time') {
+              // Convert time from URL format (HHMM) to state format (HH:MM)
+              params[key] = timeFromUrl(decodeURIComponent(value));
+            } else {
+              params[key] = decodeURIComponent(value);
+            }
+          }
+        });
+        return params;
+      }
+
+      // Update URL fragment with current state
       function updateFragment() {
-        window.location.hash = state.mode;
+        const parts = [];
+        if (state.mode) parts.push(`mode=${encodeURIComponent(state.mode)}`);
+        // Only include day/time/people in fragment if they've been changed by user
+        if (dayChanged && state.day) {
+          parts.push(`day=${encodeURIComponent(state.day)}`);
+        }
+        if (timeChanged && state.time) {
+          // Convert time to URL format without colon
+          parts.push(`time=${timeToUrl(state.time)}`);
+        }
+        if (peopleChanged && state.people) {
+          parts.push(`people=${encodeURIComponent(state.people)}`);
+        }
+        window.location.hash = parts.length > 0 ? parts.join('&') : '';
       }
 
       // Update results whenever state changes
       function updateResults() {
         renderResults();
+      }
+
+      // Get cost label based on mode
+      function getCostLabel(mode) {
+        const labels = {
+          drive: "Willing to pay for parking",
+          rideshare: "Willing to pay for ride",
+          transit: "Willing to pay for fare",
+          bike: "Willing to pay",
+          micromobility: "Willing to pay for rental",
+          walk: "Willing to pay"
+        };
+        return labels[mode] || "Willing to pay";
       }
 
       // Update preferences visibility based on mode
@@ -318,6 +373,7 @@
         const parkingUnit = document.getElementById("parkingUnit");
         const costValue = document.getElementById("costValue");
         const costPrefix = document.getElementById("costPrefix");
+        const costLabel = document.getElementById("costLabel");
         
         // Parking slider: only enabled for drive mode
         const parkingDisabled = state.mode !== "drive";
@@ -341,22 +397,42 @@
           walkUnit.textContent = " miles";
         }
         
-        // Cost slider: disabled for walk mode
-        const costDisabled = state.mode === "walk";
+        // Cost slider: disabled for walk and bike modes
+        const costDisabled = state.mode === "walk" || state.mode === "bike";
         costSlider.disabled = costDisabled;
         if (costDisabled) {
           costValue.textContent = "—";
           costPrefix.textContent = "";
         } else {
-          costValue.textContent = state.costDollars;
+          // For transit and micromobility, show total cost (per-person * people), otherwise show per-person cost
+          const displayCost = (state.mode === "transit" || state.mode === "micromobility")
+            ? state.costDollars * state.people 
+            : state.costDollars;
+          // Format to 2 decimal places, but show as integer if it's a whole number
+          costValue.textContent = displayCost % 1 === 0 
+            ? displayCost 
+            : displayCost.toFixed(2);
           costPrefix.textContent = "$";
         }
+        
+        // Update cost label based on mode
+        costLabel.textContent = getCostLabel(state.mode);
       }
 
       // Set mode and update UI
       function setMode(mode) {
         if (!validModes.includes(mode)) return;
         state.mode = mode;
+        // Set default cost based on mode
+        if (mode === "micromobility" && state.costDollars === 1.75) {
+          // If switching from transit default, set to micromobility default
+          state.costDollars = 4;
+          costSlider.value = 4;
+        } else if (mode === "transit" && state.costDollars === 4) {
+          // If switching from micromobility default, set to transit default
+          state.costDollars = 1.75;
+          costSlider.value = 1.75;
+        }
         highlightMode();
         updatePreferencesVisibility();
         updateResults();
@@ -365,14 +441,38 @@
 
       // Handle browser back/forward navigation
       window.addEventListener("hashchange", () => {
-        const fragmentMode = getModeFromFragment();
-        if (fragmentMode && fragmentMode !== state.mode) {
-          state.mode = fragmentMode;
+        const params = parseFragment();
+        if (params.mode !== undefined && params.mode !== state.mode) {
+          if (params.mode && validModes.includes(params.mode)) {
+            state.mode = params.mode;
+            highlightMode();
+            updatePreferencesVisibility();
+          } else if (!params.mode) {
+            state.mode = "";
           highlightMode();
-          updatePreferencesVisibility();
-          updateResults();
-          // Don't update fragment here to avoid loop
+            updatePreferencesVisibility();
+          }
         }
+        if (params.day !== undefined && params.day !== state.day) {
+          state.day = params.day || "";
+          daySelect.value = state.day;
+          dayChanged = true;
+        }
+        if (params.time !== undefined && params.time !== state.time) {
+          state.time = params.time || "";
+          timeSelect.value = state.time;
+          timeChanged = true;
+        }
+        if (params.people !== undefined && params.people !== state.people) {
+          const peopleValue = Number(params.people);
+          if (peopleValue >= 1 && peopleValue <= 6) {
+            state.people = peopleValue;
+            document.getElementById("peopleCount").textContent = state.people;
+            peopleChanged = true;
+          }
+        }
+        updateResults();
+        // Don't update fragment here to avoid loop
       });
 
       function highlightMode() {
@@ -387,6 +487,10 @@
       function adjustPeople(delta) {
         state.people = Math.max(1, Math.min(6, state.people + delta));
         document.getElementById("peopleCount").textContent = state.people;
+        peopleChanged = true;
+        // Always update preferences visibility to refresh cost display (shows total for transit/micromobility)
+        updatePreferencesVisibility();
+        updateFragment();
         updateResults();
       }
 
@@ -422,7 +526,14 @@
         const costValue = document.getElementById("costValue");
         const costPrefix = document.getElementById("costPrefix");
         if (!costSlider.disabled) {
-          costValue.textContent = state.costDollars;
+          // For transit and micromobility, show total cost (per-person * people), otherwise show per-person cost
+          const displayCost = (state.mode === "transit" || state.mode === "micromobility")
+            ? state.costDollars * state.people 
+            : state.costDollars;
+          // Format to 2 decimal places, but show as integer if it's a whole number
+          costValue.textContent = displayCost % 1 === 0 
+            ? displayCost 
+            : displayCost.toFixed(2);
           costPrefix.textContent = "$";
         }
         updateResults();
@@ -436,11 +547,15 @@
 
       daySelect.addEventListener("change", (e) => {
         state.day = e.target.value;
+        dayChanged = true;
+        updateFragment();
         updateResults();
       });
 
       timeSelect.addEventListener("change", (e) => {
         state.time = e.target.value;
+        timeChanged = true;
+        updateFragment();
         updateResults();
       });
 
@@ -452,7 +567,7 @@
 
       lateSlider.addEventListener("input", (e) => {
         state.flexibilityLateMins = Number(e.target.value);
-        document.getElementById("lateValue").textContent = state.flexibilityLateMins;
+        document.getElementById("lateValue").textContent = `+${state.flexibilityLateMins}`;
         updateResults();
       });
 
@@ -486,6 +601,10 @@
 
       function buildRecommendations() {
         const { mode, people, walkMiles, parkingMins, costDollars } = state;
+        // For transit and micromobility, calculate total cost (per-person * people)
+        const totalCost = (mode === "transit" || mode === "micromobility") 
+          ? costDollars * people 
+          : costDollars;
 
         const recs = [];
 
@@ -558,7 +677,7 @@
             title: "The Rapid + short walk",
             body:
               "Pick a stop on The Rapid that avoids transfers, then walk the last few minutes.",
-            meta: `Walk tolerance: ${walkMiles.toFixed(1)} miles • People: ${people}`,
+            meta: `Walk tolerance: ${walkMiles.toFixed(1)} miles • People: ${people} • Fare: $${totalCost.toFixed(2)}`,
             badge: "Chill",
           });
         }
@@ -587,15 +706,15 @@
             title: "Find a Lime near you, ride to destination",
             body:
               "Use the app to locate the nearest available scooter or bike, then ride directly to your destination.",
-            meta: `Budget: $${costDollars} • Walk: ${walkMiles.toFixed(1)} miles`,
+            meta: `Budget: $${totalCost.toFixed(2)} • Walk: ${walkMiles.toFixed(1)} miles`,
             badge: "On-demand",
           });
-          if (costDollars >= 10) {
+          if (totalCost >= 10) {
             recs.push({
               title: "Ride the whole way",
               body:
                 "If you're willing to pay, ride directly to the destination without worrying about parking.",
-              meta: `Budget: $${costDollars}`,
+              meta: `Budget: $${totalCost.toFixed(2)}`,
               badge: "Convenient",
             });
           }
@@ -609,8 +728,10 @@
           meta:
             mode === "drive"
               ? `Parking hunt limit: ${parkingMins} min`
-              : mode === "rideshare" || mode === "micromobility"
+              : mode === "rideshare"
               ? `Budget limit: $${costDollars}`
+              : mode === "transit" || mode === "micromobility"
+              ? `Budget limit: $${totalCost.toFixed(2)}`
               : `Walk limit: ${walkMiles.toFixed(1)} miles`,
           badge: "Rule",
         });
@@ -619,20 +740,44 @@
       }
 
       // init
-      // Read mode from URL fragment or use default
-      const fragmentMode = getModeFromFragment();
-      if (fragmentMode) {
-        state.mode = fragmentMode;
+      // Read from URL fragment
+      const params = parseFragment();
+      if (params.mode && validModes.includes(params.mode)) {
+        state.mode = params.mode;
+        // Set default cost based on mode
+        if (state.mode === "micromobility" && state.costDollars === 1.75) {
+          state.costDollars = 4;
+        }
+      } else if (state.mode === "micromobility") {
+        // If default mode is micromobility, set cost to $4
+        state.costDollars = 4;
+      }
+      if (params.day) {
+        state.day = params.day;
+        dayChanged = true; // Mark as changed since it came from fragment
+      }
+      if (params.time) {
+        state.time = params.time;
+        timeChanged = true; // Mark as changed since it came from fragment
+      }
+      if (params.people) {
+        const peopleValue = Number(params.people);
+        if (peopleValue >= 1 && peopleValue <= 6) {
+          state.people = peopleValue;
+          peopleChanged = true; // Mark as changed since it came from fragment
+        }
       }
       
       // Generate time options and initialize inputs
       generateTimeOptions();
       daySelect.value = state.day;
       timeSelect.value = state.time;
+        document.getElementById("peopleCount").textContent = state.people;
+        costSlider.value = state.costDollars;
       earlySlider.value = state.flexibilityEarlyMins;
       lateSlider.value = state.flexibilityLateMins;
       document.getElementById("earlyValue").textContent = `-${state.flexibilityEarlyMins}`;
-      document.getElementById("lateValue").textContent = state.flexibilityLateMins;
+      document.getElementById("lateValue").textContent = `+${state.flexibilityLateMins}`;
       
       // Attach mode button event listeners
       document.querySelectorAll(".modeBtn").forEach((btn) => {
