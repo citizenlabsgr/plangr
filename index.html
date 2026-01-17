@@ -12,18 +12,20 @@
   <body class="bg-slate-50 text-slate-900">
     <main class="max-w-md mx-auto px-4 py-6">
       <div class="space-y-4">
-      <!-- Step 1: Destination, Day and Time -->
-        <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <!-- Step 1: Destination, Day and Time -->
+        <section
+          class="bg-white rounded-xl shadow-sm border border-slate-200 p-4"
+        >
           <h2 class="font-semibold text-lg">Where are you going?</h2>
 
           <label class="block mt-4 text-sm font-medium">Destination</label>
           <div class="mt-1 relative">
-          <input
-            id="destination"
+            <input
+              id="destination"
               class="w-full rounded-lg border border-slate-300 px-3 py-2 pr-10 bg-slate-100"
               value="Van Andel Arena"
-            disabled
-          />
+              disabled
+            />
             <button
               type="button"
               id="resetButton"
@@ -57,27 +59,28 @@
           <select
             id="timeSelect"
             class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 bg-white"
-          >
-          </select>
+          ></select>
 
-            <!-- TODO: Show flexibility toggle when ready -->
-            <button
+          <!-- TODO: Show flexibility toggle when ready -->
+          <button
             type="button"
             id="flexibilityToggle"
             class="hidden mt-4 w-full flex items-center justify-between text-sm font-medium text-slate-500 text-left hover:text-slate-700 cursor-pointer"
-            >
+          >
             <span>Flexibility</span>
             <span id="flexibilityArrow">▼</span>
-            </button>
-          
+          </button>
+
           <div id="flexibilityContent" class="hidden mt-4">
             <div class="mt-2">
               <div class="flex items-center justify-between">
-                <label class="text-sm font-medium">Willing to arrive early</label>
+                <label class="text-sm font-medium"
+                  >Willing to arrive early</label
+                >
                 <span class="text-sm text-slate-600">
                   <span id="earlyValue">-15</span> min
                 </span>
-          </div>
+              </div>
               <input
                 id="earlySlider"
                 type="range"
@@ -87,62 +90,98 @@
                 value="15"
                 class="w-full mt-2"
               />
-        </div>
-
-          <div class="mt-4">
-            <div class="flex items-center justify-between">
-                <label class="text-sm font-medium">Willing to arrive late</label>
-              <span class="text-sm text-slate-600">
-                  <span id="lateValue">+0</span> min
-              </span>
             </div>
-            <input
+
+            <div class="mt-4">
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium"
+                  >Willing to arrive late</label
+                >
+                <span class="text-sm text-slate-600">
+                  <span id="lateValue">+0</span> min
+                </span>
+              </div>
+              <input
                 id="lateSlider"
-              type="range"
-              min="0"
+                type="range"
+                min="0"
                 max="60"
                 step="5"
                 value="0"
-              class="w-full mt-2"
-            />
+                class="w-full mt-2"
+              />
             </div>
           </div>
-      </section>
+        </section>
 
-      <!-- Step 2: Mode + People + Sliders -->
-        <section id="preferencesSection" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+        <!-- Step 2: Mode + People + Sliders -->
+        <section
+          id="preferencesSection"
+          class="bg-white rounded-xl shadow-sm border border-slate-200 p-4"
+        >
           <h2 class="font-semibold text-lg">Which modes are you open to?</h2>
 
           <label class="block mt-4 text-sm font-medium">Modes</label>
           <div class="mt-2 grid grid-cols-2 gap-2">
-            <button type="button" class="modeBtn rounded-lg border border-slate-300 py-2" data-mode="drive">
+            <button
+              type="button"
+              class="modeBtn rounded-lg border border-slate-300 py-2"
+              data-mode="drive"
+            >
               🚗 Drive
             </button>
-            <button type="button" class="modeBtn rounded-lg border border-slate-300 py-2" data-mode="rideshare">
+            <button
+              type="button"
+              class="modeBtn rounded-lg border border-slate-300 py-2"
+              data-mode="rideshare"
+            >
               🚕 Uber/Lyft
             </button>
-            <button type="button" class="modeBtn rounded-lg border border-slate-300 py-2" data-mode="transit">
+            <button
+              type="button"
+              class="modeBtn rounded-lg border border-slate-300 py-2"
+              data-mode="transit"
+            >
               🚌 The Rapid
             </button>
-            <button type="button" class="modeBtn rounded-lg border border-slate-300 py-2" data-mode="shuttle">
+            <button
+              type="button"
+              class="modeBtn rounded-lg border border-slate-300 py-2"
+              data-mode="shuttle"
+            >
               🚐 DASH
             </button>
-            <button type="button" class="modeBtn rounded-lg border border-slate-300 py-2" data-mode="micromobility">
+            <button
+              type="button"
+              class="modeBtn rounded-lg border border-slate-300 py-2"
+              data-mode="micromobility"
+            >
               🛴 Lime
             </button>
-            <button type="button" class="modeBtn rounded-lg border border-slate-300 py-2" data-mode="bike">
+            <button
+              type="button"
+              class="modeBtn rounded-lg border border-slate-300 py-2"
+              data-mode="bike"
+            >
               🚲 Bike
             </button>
           </div>
 
-          <h2 id="preferencesHeading" class="font-semibold text-lg mt-6">What is your time and money budget?</h2>
+          <h2 id="preferencesHeading" class="font-semibold text-lg mt-6">
+            What is your time and money budget?
+          </h2>
 
           <!-- Walk distance -->
           <div id="walkBlock" class="mt-4">
             <div class="flex items-center justify-between">
-              <label class="text-sm font-medium">Willing to walk to destination</label>
+              <label class="text-sm font-medium"
+                >Willing to walk to destination</label
+              >
               <span class="text-sm text-slate-600">
-                <span id="walkValue">0.5</span><span id="walkUnit"> miles</span> <span id="walkTime">(<span id="walkTimeValue">10</span> min)</span>
+                <span id="walkValue">0.5</span><span id="walkUnit"> miles</span>
+                <span id="walkTime"
+                  >(<span id="walkTimeValue">10</span> min)</span
+                >
               </span>
             </div>
             <input
@@ -156,11 +195,12 @@
             />
           </div>
 
-
           <!-- Cost -->
           <div class="mt-4">
             <div class="flex items-center justify-between">
-              <label id="costLabel" class="text-sm font-medium">Willing to pay</label>
+              <label id="costLabel" class="text-sm font-medium"
+                >Willing to pay</label
+              >
               <span class="text-sm text-slate-600">
                 <span id="costPrefix">$</span><span id="costValue">10</span>
               </span>
@@ -177,1121 +217,48 @@
           </div>
 
           <!-- TODO: Show people toggle when ready -->
-            <button
+          <button
             type="button"
             id="peopleToggle"
             class="hidden mt-6 w-full flex items-center justify-between text-sm font-medium text-slate-500 text-left hover:text-slate-700 cursor-pointer"
-            >
+          >
             <span>People</span>
             <span id="peopleArrow">▼</span>
-            </button>
-          
+          </button>
+
           <div id="peopleContent" class="hidden mt-4">
             <div class="flex items-center gap-2">
-            <button
-              class="w-10 h-10 rounded-lg border border-slate-300 bg-white"
-              onclick="adjustPeople(-1)"
-              aria-label="Decrease people"
-            >
-              −
-            </button>
-            <div
-              id="peopleCount"
-              class="flex-1 text-center font-semibold text-lg"
-            >
-              1
+              <button
+                class="w-10 h-10 rounded-lg border border-slate-300 bg-white"
+                onclick="adjustPeople(-1)"
+                aria-label="Decrease people"
+              >
+                −
+              </button>
+              <div
+                id="peopleCount"
+                class="flex-1 text-center font-semibold text-lg"
+              >
+                1
+              </div>
+              <button
+                class="w-10 h-10 rounded-lg border border-slate-300 bg-white"
+                onclick="adjustPeople(1)"
+                aria-label="Increase people"
+              >
+                +
+              </button>
+            </div>
           </div>
-            <button
-              class="w-10 h-10 rounded-lg border border-slate-300 bg-white"
-              onclick="adjustPeople(1)"
-              aria-label="Increase people"
-            >
-              +
-            </button>
-          </div>
-        </div>
-      </section>
+        </section>
 
-
-      <!-- Step 4: Results -->
+        <!-- Step 4: Results -->
         <div class="mt-8 -mx-4">
           <div id="results" class="space-y-3"></div>
         </div>
-        
-        </div>
+      </div>
     </main>
 
-    <script>
-      // Calculate default time: current time + 2 hours, rounded to nearest half hour
-      // Minimum time is 5pm (17:00), maximum is 10pm (22:00)
-      function getDefaultTime() {
-        const now = new Date();
-        const twoHoursLater = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-        let hour = twoHoursLater.getHours();
-        let minutes = twoHoursLater.getMinutes();
-        // Round to nearest half hour
-        if (minutes < 15) {
-          minutes = 0;
-        } else if (minutes < 45) {
-          minutes = 30;
-        } else {
-          minutes = 0;
-          hour = (hour + 1) % 24;
-        }
-        // Ensure time is between 5pm and 10pm
-        if (hour < 17) {
-          hour = 17;
-          minutes = 0;
-        } else if (hour > 22 || (hour === 22 && minutes > 0)) {
-          hour = 22;
-          minutes = 0;
-        }
-        return String(hour).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
-      }
-
-      // Generate time options for dropdown (half-hour increments, starting at 5pm, ending at 10pm)
-      function generateTimeOptions() {
-        const timeSelect = document.getElementById("timeSelect");
-        const options = [];
-        // Start at 5pm (17:00) and go through 10pm (22:00)
-        for (let hour = 17; hour <= 22; hour++) {
-          for (let minute of [0, 30]) {
-            // Skip 10:30pm, only go up to 10:00pm
-            if (hour === 22 && minute === 30) break;
-            const timeValue = String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
-            const timeDisplay = new Date(`2000-01-01T${timeValue}`).toLocaleTimeString('en-US', {
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true
-            });
-            options.push(`<option value="${timeValue}">${timeDisplay}</option>`);
-          }
-        }
-        timeSelect.innerHTML = options.join('');
-      }
-
-      const defaultTime = getDefaultTime();
-
-      const state = {
-        destination: "Van Andel Arena",
-        day: "today",
-        time: defaultTime,
-        flexibilityEarlyMins: 15,
-        flexibilityLateMins: 0,
-        modes: [], // Array of selected modes
-        people: 1,
-        walkMiles: 0.5,
-        parkingMins: 10,
-        costDollars: 10,
-      };
-
-      // Valid modes
-      const validModes = ["drive", "rideshare", "transit", "micromobility", "shuttle", "bike"];
-
-      // Track if day/time/people have been changed from defaults
-      let dayChanged = false;
-      let timeChanged = false;
-      let peopleChanged = false;
-
-      // Convert time from HH:MM (24-hour) to HMM or HHMM (12-hour without colon) for URL
-      // Times are 5pm-10pm, so we use 12-hour format: 17:00 -> "500", 20:30 -> "830", 22:00 -> "1000"
-      function timeToUrl(time) {
-        const [hours, minutes] = time.split(':');
-        const hour24 = parseInt(hours, 10);
-        // Convert to 12-hour format (all times are PM since range is 5pm-10pm)
-        const hour12 = hour24 > 12 ? hour24 - 12 : hour24;
-        // Return without leading zero for single-digit hours (e.g., 8:30 PM -> "830", 5:00 PM -> "500")
-        return hour12.toString() + minutes;
-      }
-
-      // Convert time from HMM or HHMM (12-hour) to HH:MM (24-hour) from URL
-      // All times are PM since the dropdown only has 5pm-10pm
-      function timeFromUrl(urlTime) {
-        // Handle formats like "830" (8:30 PM = 20:30) or "500" (5:00 PM = 17:00) or "1000" (10:00 PM = 22:00)
-        if (urlTime.length === 3) {
-          // Format: HMM (e.g., "830" = 8:30 PM = 20:30)
-          const hour12 = parseInt(urlTime[0], 10);
-          const minutes = urlTime.slice(1);
-          // All times are PM (5pm-10pm range)
-          const hour24 = hour12 === 12 ? 12 : hour12 + 12;
-          return hour24.toString().padStart(2, '0') + ':' + minutes;
-        } else if (urlTime.length === 4) {
-          // Format: HHMM (e.g., "1000" = 10:00 PM = 22:00)
-          const hour12 = parseInt(urlTime.slice(0, 2), 10);
-          const minutes = urlTime.slice(2);
-          // All times are PM (5pm-10pm range)
-          const hour24 = hour12 === 12 ? 12 : hour12 + 12;
-          return hour24.toString().padStart(2, '0') + ':' + minutes;
-        }
-        return urlTime; // Fallback if already in HH:MM format
-      }
-
-      // Parse URL fragment (format: #modes=drive,transit&day=today&time=1800&people=2)
-      function parseFragment() {
-        const hash = window.location.hash.slice(1); // Remove the #
-        if (!hash) return {};
-        
-        const params = {};
-        hash.split('&').forEach(param => {
-          const [key, value] = param.split('=');
-          if (key && value) {
-            if (key === 'time') {
-              // Convert time from URL format (HHMM) to state format (HH:MM)
-              params[key] = timeFromUrl(decodeURIComponent(value));
-            } else {
-              params[key] = decodeURIComponent(value);
-            }
-          }
-        });
-        return params;
-      }
-
-      // Update URL fragment with current state
-      function updateFragment() {
-        const parts = [];
-        if (state.modes.length > 0) {
-          parts.push(`modes=${state.modes.join(',')}`);
-        }
-        // Only include day/time/people in fragment if they've been changed by user
-        if (dayChanged && state.day) {
-          parts.push(`day=${encodeURIComponent(state.day)}`);
-        }
-        if (timeChanged && state.time) {
-          // Convert time to URL format without colon
-          parts.push(`time=${timeToUrl(state.time)}`);
-        }
-        if (peopleChanged && state.people) {
-          parts.push(`people=${encodeURIComponent(state.people)}`);
-        }
-        window.location.hash = parts.length > 0 ? parts.join('&') : '';
-      }
-
-      // Update results whenever state changes
-      function updateResults() {
-        renderResults();
-        updateDirectionsLink();
-      }
-
-      // Get mode display name
-      function getModeLabel(mode) {
-        const labels = {
-          drive: "driving",
-          rideshare: "Uber/Lyft",
-          transit: "The Rapid",
-          bike: "biking",
-          micromobility: "Lime",
-          walk: "walking",
-          shuttle: "DASH"
-        };
-        return labels[mode] || mode;
-      }
-
-      // Get cost label based on mode
-      function getCostLabel(mode) {
-        const labels = {
-          drive: "Willing to pay",
-          rideshare: "Willing to pay",
-          transit: "Willing to pay",
-          bike: "Willing to pay",
-          micromobility: "Willing to pay",
-          walk: "Willing to pay",
-          shuttle: "Willing to pay"
-        };
-        return labels[mode] || "Willing to pay";
-      }
-
-      // Update preferences visibility based on mode
-      function updateDirectionsLink() {
-        const directionsLink = document.getElementById("directionsLink");
-        const directionsLinkText = document.getElementById("directionsLinkText");
-        if (!directionsLink || !directionsLinkText) return;
-
-        const destination = encodeURIComponent(state.destination + ", Grand Rapids, MI");
-        let linkUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
-        let linkText = "Get directions on Google Maps";
-
-        // Update link based on primary mode
-        const primaryMode = state.modes.length > 0 ? state.modes[0] : "drive";
-        switch (primaryMode) {
-          case "drive":
-            // Link to parking near destination
-            linkUrl = `https://www.google.com/maps/search/?api=1&query=parking+near+${destination}`;
-            linkText = "Find parking near destination";
-            break;
-          case "transit":
-            // Link to transit stops near destination
-            linkUrl = `https://www.google.com/maps/search/?api=1&query=transit+stop+near+${destination}`;
-            linkText = "Find transit stop near destination";
-            break;
-          case "micromobility":
-            // Link to destination (Lime scooters can be found via app)
-            linkText = "Get directions to destination";
-            break;
-          case "rideshare":
-            // Link to destination (rideshare drop-off)
-            linkText = "Get directions to destination";
-            break;
-          case "shuttle":
-            // Link to DASH stops near destination
-            linkUrl = `https://www.google.com/maps/search/?api=1&query=DASH+shuttle+stop+near+${destination}`;
-            linkText = "Find DASH stop near destination";
-            break;
-          case "bike":
-            // Link to bike racks near destination
-            linkUrl = `https://www.google.com/maps/search/?api=1&query=bike+rack+near+${destination}`;
-            linkText = "Find bike rack near destination";
-            break;
-          default:
-            linkText = "Get directions on Google Maps";
-        }
-
-        directionsLink.href = linkUrl;
-        directionsLinkText.textContent = linkText;
-      }
-
-      function updatePreferencesVisibility() {
-        const walkSlider = document.getElementById("walkSlider");
-        const costSlider = document.getElementById("costSlider");
-        const walkValue = document.getElementById("walkValue");
-        const walkUnit = document.getElementById("walkUnit");
-        const costValue = document.getElementById("costValue");
-        const costPrefix = document.getElementById("costPrefix");
-        const costLabel = document.getElementById("costLabel");
-        
-        // Walk slider: disabled for rideshare mode (everyone can walk a little)
-        const walkDisabled = state.modes.includes("rideshare");
-        const walkTime = document.getElementById("walkTime");
-        const walkTimeValue = document.getElementById("walkTimeValue");
-        walkSlider.disabled = walkDisabled;
-        if (walkDisabled) {
-          walkValue.textContent = "—";
-          walkUnit.textContent = "";
-          if (walkTime) walkTime.style.display = "none";
-        } else {
-          walkValue.textContent = state.walkMiles.toFixed(1);
-          walkUnit.textContent = " miles";
-          // Calculate walking time (assuming 3 mph average walking speed)
-          const walkMinutes = Math.round(state.walkMiles * 20); // 3 mph = 20 min per mile
-          if (walkTimeValue) walkTimeValue.textContent = walkMinutes;
-          if (walkTime) walkTime.style.display = "inline";
-        }
-        
-        // Cost slider: disabled for bike mode
-        const costDisabled = state.modes.includes("bike");
-        costSlider.disabled = costDisabled;
-        if (costDisabled) {
-          costValue.textContent = "—";
-          costPrefix.textContent = "";
-        } else {
-          // For transit and micromobility, show total cost (per-person * people), otherwise show per-person cost
-          const displayCost = (state.modes.includes("transit") || state.modes.includes("micromobility"))
-            ? state.costDollars * state.people 
-            : state.costDollars;
-          // Format to 2 decimal places, but show as integer if it's a whole number
-          costValue.textContent = displayCost % 1 === 0 
-            ? displayCost 
-            : displayCost.toFixed(2);
-          costPrefix.textContent = "$";
-        }
-        
-        // Update cost label based on primary mode
-        const primaryMode = state.modes.length > 0 ? state.modes[0] : "drive";
-        costLabel.textContent = getCostLabel(primaryMode);
-        
-        // Gray out entire section if all preferences are disabled
-        const allDisabled = walkDisabled && costDisabled;
-        const preferencesSection = document.getElementById("preferencesSection");
-        const preferencesHeading = document.getElementById("preferencesHeading");
-        if (preferencesSection) {
-          preferencesSection.classList.toggle("opacity-50", allDisabled);
-        }
-        if (preferencesHeading) {
-          preferencesHeading.classList.toggle("opacity-50", allDisabled);
-        }
-        
-      }
-
-      // Toggle mode selection (multi-select)
-      function toggleMode(mode) {
-        if (!validModes.includes(mode)) return;
-        
-        const index = state.modes.indexOf(mode);
-        if (index > -1) {
-          // Remove mode if already selected
-          state.modes.splice(index, 1);
-        } else {
-          // Add mode if not selected
-          state.modes.push(mode);
-        }
-        
-        
-        // Set default cost based on first mode if cost is at a default value
-        const primaryMode = state.modes[0];
-        if (primaryMode === "micromobility" && (state.costDollars === 10 || state.costDollars === 15)) {
-          state.costDollars = 4;
-          costSlider.value = 4;
-        } else if (primaryMode === "transit" && (state.costDollars === 4 || state.costDollars === 15)) {
-          state.costDollars = 1.75;
-          costSlider.value = 1.75;
-        } else if (primaryMode === "rideshare" && (state.costDollars === 10 || state.costDollars === 4)) {
-          state.costDollars = 15;
-          costSlider.value = 15;
-        }
-        
-          highlightMode();
-        updatePreferencesVisibility();
-        updateResults();
-        updateFragment();
-      }
-
-      // Handle browser back/forward navigation
-      window.addEventListener("hashchange", () => {
-        const params = parseFragment();
-        if (params.modes !== undefined) {
-          const modesArray = params.modes ? params.modes.split(',').filter(m => validModes.includes(m)) : [];
-          state.modes = modesArray;
-          highlightMode();
-          updatePreferencesVisibility();
-        }
-        if (params.day !== undefined && params.day !== state.day) {
-          state.day = params.day || "";
-          daySelect.value = state.day;
-          dayChanged = true;
-        }
-        if (params.time !== undefined && params.time !== state.time) {
-          state.time = params.time || "";
-          timeSelect.value = state.time;
-          timeChanged = true;
-        }
-        if (params.people !== undefined && params.people !== state.people) {
-          const peopleValue = Number(params.people);
-          if (peopleValue >= 1 && peopleValue <= 6) {
-            state.people = peopleValue;
-            document.getElementById("peopleCount").textContent = state.people;
-            peopleChanged = true;
-          }
-        }
-        updateResults();
-        // Don't update fragment here to avoid loop
-      });
-
-      function highlightMode() {
-        document.querySelectorAll(".modeBtn").forEach((btn) => {
-          const active = state.modes.includes(btn.dataset.mode);
-          btn.classList.toggle("bg-slate-900", active);
-          btn.classList.toggle("text-white", active);
-          btn.classList.toggle("border-slate-900", active);
-        });
-      }
-
-      function adjustPeople(delta) {
-        state.people = Math.max(1, Math.min(6, state.people + delta));
-        document.getElementById("peopleCount").textContent = state.people;
-        peopleChanged = true;
-        // Always update preferences visibility to refresh cost display (shows total for transit/micromobility)
-        updatePreferencesVisibility();
-        updateFragment();
-        updateResults();
-      }
-
-      // Sliders
-      const walkSlider = document.getElementById("walkSlider");
-      const costSlider = document.getElementById("costSlider");
-
-      walkSlider.addEventListener("input", (e) => {
-        state.walkMiles = Number(e.target.value);
-        const walkValue = document.getElementById("walkValue");
-        const walkUnit = document.getElementById("walkUnit");
-        const walkTime = document.getElementById("walkTime");
-        const walkTimeValue = document.getElementById("walkTimeValue");
-        if (!walkSlider.disabled) {
-          walkValue.textContent = state.walkMiles.toFixed(1);
-          walkUnit.textContent = " miles";
-          // Calculate walking time (assuming 3 mph average walking speed)
-          const walkMinutes = Math.round(state.walkMiles * 20); // 3 mph = 20 min per mile
-          if (walkTimeValue) walkTimeValue.textContent = walkMinutes;
-          if (walkTime) walkTime.style.display = "inline";
-        }
-        updateResults();
-      });
-
-
-      costSlider.addEventListener("input", (e) => {
-        state.costDollars = Number(e.target.value);
-        const costValue = document.getElementById("costValue");
-        const costPrefix = document.getElementById("costPrefix");
-        if (!costSlider.disabled) {
-          // For transit and micromobility, show total cost (per-person * people), otherwise show per-person cost
-          const displayCost = (state.modes.includes("transit") || state.modes.includes("micromobility"))
-            ? state.costDollars * state.people 
-            : state.costDollars;
-          // Format to 2 decimal places, but show as integer if it's a whole number
-          costValue.textContent = displayCost % 1 === 0 
-            ? displayCost 
-            : displayCost.toFixed(2);
-          costPrefix.textContent = "$";
-        }
-        updateResults();
-      });
-
-      // Day and Time inputs
-      const daySelect = document.getElementById("daySelect");
-      const timeSelect = document.getElementById("timeSelect");
-      const earlySlider = document.getElementById("earlySlider");
-      const lateSlider = document.getElementById("lateSlider");
-
-      daySelect.addEventListener("change", (e) => {
-        state.day = e.target.value;
-        dayChanged = true;
-        updateFragment();
-        updateResults();
-      });
-
-      timeSelect.addEventListener("change", (e) => {
-        state.time = e.target.value;
-        timeChanged = true;
-        updateFragment();
-        updateResults();
-      });
-
-      // Flexibility toggle
-      const flexibilityToggle = document.getElementById("flexibilityToggle");
-      const flexibilityContent = document.getElementById("flexibilityContent");
-      const flexibilityArrow = document.getElementById("flexibilityArrow");
-      
-      flexibilityToggle.addEventListener("click", () => {
-        const isHidden = flexibilityContent.classList.toggle("hidden");
-        flexibilityArrow.textContent = isHidden ? "▼" : "▲";
-        // Change text color: gray when collapsed, black when expanded
-        if (isHidden) {
-          flexibilityToggle.classList.remove("text-slate-900");
-          flexibilityToggle.classList.add("text-slate-500");
-        } else {
-          flexibilityToggle.classList.remove("text-slate-500");
-          flexibilityToggle.classList.add("text-slate-900");
-        }
-      });
-
-      // People toggle
-      const peopleToggle = document.getElementById("peopleToggle");
-      const peopleContent = document.getElementById("peopleContent");
-      const peopleArrow = document.getElementById("peopleArrow");
-      
-      peopleToggle.addEventListener("click", () => {
-        const isHidden = peopleContent.classList.toggle("hidden");
-        peopleArrow.textContent = isHidden ? "▼" : "▲";
-        // Change text color: gray when collapsed, black when expanded
-        if (isHidden) {
-          peopleToggle.classList.remove("text-slate-900");
-          peopleToggle.classList.add("text-slate-500");
-        } else {
-          peopleToggle.classList.remove("text-slate-500");
-          peopleToggle.classList.add("text-slate-900");
-        }
-      });
-
-      earlySlider.addEventListener("input", (e) => {
-        state.flexibilityEarlyMins = Number(e.target.value);
-        document.getElementById("earlyValue").textContent = `-${state.flexibilityEarlyMins}`;
-        updateResults();
-      });
-
-      lateSlider.addEventListener("input", (e) => {
-        state.flexibilityLateMins = Number(e.target.value);
-        document.getElementById("lateValue").textContent = `+${state.flexibilityLateMins}`;
-        updateResults();
-      });
-
-
-      function renderResults() {
-        const resultsEl = document.getElementById("results");
-        resultsEl.innerHTML = "";
-
-        const { primary, alternate } = buildRecommendation();
-
-        if (!primary) return;
-
-        // Render primary recommendation (green, yellow if discouraged, or red if no options)
-          const card = document.createElement("div");
-        const isNoOptions = primary.isNoOptions;
-        const isDiscouraged = primary.isDiscouraged;
-        card.className = isNoOptions 
-          ? "rounded-none bg-red-50 border border-red-200 p-6"
-          : isDiscouraged
-          ? "rounded-none bg-yellow-50 border border-yellow-200 p-6"
-          : "rounded-none bg-green-50 border border-green-200 p-6";
-        
-        const recommendation = primary;
-
-        // If there are steps, make them the primary focus
-        if (isNoOptions) {
-          card.innerHTML = `
-            <div class="space-y-4">
-              <div>
-                <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">No Options Available</div>
-                <h3 class="font-semibold text-xl">${recommendation.title}</h3>
-                ${recommendation.body ? `<p class="text-sm text-slate-600 mt-2">${recommendation.body}</p>` : ''}
-              </div>
-            </div>
-          `;
-        } else if (recommendation.steps && recommendation.steps.length > 0) {
-          const strategyLabel = isDiscouraged ? "Alternative Strategy" : "Recommended Strategy";
-          card.innerHTML = `
-            <div class="space-y-4">
-              <div>
-                <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">${strategyLabel}</div>
-                <h3 class="font-semibold text-xl">${recommendation.title}</h3>
-                ${recommendation.body ? `<p class="text-sm text-slate-600 mt-2">${recommendation.body}</p>` : ''}
-              </div>
-              <div class="space-y-4">
-                <div class="text-sm font-semibold text-slate-700">Follow these steps:</div>
-                <ol class="space-y-4">
-                  ${recommendation.steps.map((step, index) => `
-                    <li class="flex gap-4">
-                      <span class="flex-shrink-0 w-8 h-8 rounded-full bg-slate-900 text-white text-sm font-bold flex items-center justify-center">${index + 1}</span>
-                      <div class="flex-1 pt-1">
-                        <div class="font-semibold text-base text-slate-900">${step.title}</div>
-                        ${step.description ? `<div class="text-sm text-slate-600 mt-2 leading-relaxed">${step.description}</div>` : ''}
-                        ${step.link ? `<a href="${step.link}" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-sm text-blue-600 hover:text-blue-800 underline">${step.linkText || 'Open link'} →</a>` : ''}
-                      </div>
-                    </li>
-                  `).join('')}
-                </ol>
-              </div>
-            </div>
-          `;
-        } else {
-          // Single step instruction format
-          const strategyLabel = isDiscouraged ? "Alternative Strategy" : "Recommended Strategy";
-          card.innerHTML = `
-            <div class="space-y-4">
-              <div>
-                <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">${strategyLabel}</div>
-                <h3 class="font-semibold text-xl">${recommendation.title}</h3>
-              </div>
-              <div class="space-y-4">
-                <div class="flex gap-4">
-                  <span class="flex-shrink-0 w-8 h-8 rounded-full bg-slate-900 text-white text-sm font-bold flex items-center justify-center">1</span>
-                  <div class="flex-1 pt-1">
-                    <div class="font-semibold text-base text-slate-900">${recommendation.instruction || recommendation.title}</div>
-                    ${recommendation.body ? `<div class="text-sm text-slate-600 mt-2 leading-relaxed">${recommendation.body}</div>` : ''}
-                  </div>
-                </div>
-              </div>
-              ${recommendation.meta ? `<div class="pt-4 border-t border-slate-200 text-xs text-slate-500">${recommendation.meta}</div>` : ''}
-            </div>
-          `;
-        }
-
-          resultsEl.appendChild(card);
-
-        // Render alternate recommendation (yellow) if applicable
-        if (alternate) {
-          const altCard = document.createElement("div");
-          altCard.className = "rounded-none bg-yellow-50 border border-yellow-200 p-6 mt-4";
-          
-          if (alternate.steps && alternate.steps.length > 0) {
-            altCard.innerHTML = `
-              <div class="space-y-4">
-                <div>
-                  <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Alternate Strategy</div>
-                  <h3 class="font-semibold text-xl">${alternate.title}</h3>
-                  ${alternate.body ? `<p class="text-sm text-slate-600 mt-2">${alternate.body}</p>` : ''}
-                </div>
-                <div class="space-y-4">
-                  <div class="text-sm font-semibold text-slate-700">Follow these steps:</div>
-                  <ol class="space-y-4">
-                    ${alternate.steps.map((step, index) => `
-                      <li class="flex gap-4">
-                        <span class="flex-shrink-0 w-8 h-8 rounded-full bg-slate-900 text-white text-sm font-bold flex items-center justify-center">${index + 1}</span>
-                        <div class="flex-1 pt-1">
-                          <div class="font-semibold text-base text-slate-900">${step.title}</div>
-                          ${step.description ? `<div class="text-sm text-slate-600 mt-2 leading-relaxed">${step.description}</div>` : ''}
-                          ${step.link ? `<a href="${step.link}" target="_blank" rel="noopener noreferrer" class="mt-2 inline-block text-sm text-blue-600 hover:text-blue-800 underline">${step.linkText || 'Open link'} →</a>` : ''}
-                        </div>
-                      </li>
-                    `).join('')}
-                  </ol>
-                </div>
-              </div>
-            `;
-          } else {
-            altCard.innerHTML = `
-              <div class="space-y-4">
-                <div>
-                  <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Alternate Strategy</div>
-                  <h3 class="font-semibold text-xl">${alternate.title}</h3>
-                </div>
-                <div class="space-y-4">
-                  <div class="flex gap-4">
-                    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-slate-900 text-white text-sm font-bold flex items-center justify-center">1</span>
-                    <div class="flex-1 pt-1">
-                      <div class="font-semibold text-base text-slate-900">${alternate.instruction || alternate.title}</div>
-                      ${alternate.body ? `<div class="text-sm text-slate-600 mt-2 leading-relaxed">${alternate.body}</div>` : ''}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            `;
-          }
-          
-          resultsEl.appendChild(altCard);
-        }
-      }
-
-      function buildRecommendation() {
-        const { modes, people, walkMiles, costDollars } = state;
-        
-        if (!modes || modes.length === 0) return { primary: null, alternate: null };
-
-        const steps = [];
-        let recommendation = {};
-        let alternate = null;
-        
-        // Check which modes are selected
-        const hasDrive = modes.includes("drive");
-        const hasTransit = modes.includes("transit");
-        const hasRideshare = modes.includes("rideshare");
-        const hasMicromobility = modes.includes("micromobility");
-        const hasShuttle = modes.includes("shuttle");
-        const hasBike = modes.includes("bike");
-
-        // Build recommendation based on selected modes
-        // Priority: drive combinations > transit combinations > single modes
-        
-        if (hasDrive) {
-          // Drive mode combinations
-          if (hasShuttle) {
-            // Drive + Shuttle: Park farther, use DASH
-            if (walkMiles === 0) {
-              recommendation = {
-                title: "No options available",
-                body: "You're driving and using DASH but not willing to walk any distance. Consider adjusting your walk distance to see recommendations.",
-                isNoOptions: true
-              };
-          } else {
-              recommendation = {
-                title: "Park farther, use DASH for last mile",
-                body: "Park in a less crowded area and take the free DASH shuttle to get closer to your destination.",
-                badge: "Time saver",
-              };
-              steps.push(
-                { title: "Park farther from destination", description: `Find parking away from the destination where spots are easier to find. Look for areas with less competition.` },
-                { title: "Take the DASH shuttle", description: "Walk to the nearest DASH stop and board the free downtown shuttle. Ride it to get closer to your destination." }
-              );
-            }
-          } else if (hasTransit) {
-            // Drive + Transit: Park at Rapid stop, take transit
-            if (walkMiles === 0) {
-              recommendation = {
-                title: "No options available",
-                body: "You're driving and taking transit but not willing to walk any distance. Consider adjusting your walk distance to see recommendations.",
-                isNoOptions: true
-              };
-            } else {
-              recommendation = {
-                title: "Park at Rapid stop, take transit",
-                body: "Park near a Rapid transit stop and take the bus to get closer to your destination.",
-                badge: "Cost saver",
-              };
-              const transitUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(state.destination + ", Grand Rapids, MI")}&travelmode=transit`;
-              steps.push(
-                { title: "Park near a Rapid stop", description: `Find parking near a Rapid transit stop. This area will have more available parking.` },
-                { title: "Board The Rapid", description: "Walk to the Rapid stop and board the bus. Ride to a stop that's within walking distance of your destination.", link: transitUrl, linkText: "View transit route on Google Maps" }
-              );
-            }
-          } else if (hasMicromobility) {
-            // Drive + Micromobility: Park farther, use Lime
-            if (walkMiles === 0) {
-              recommendation = {
-                title: "No options available",
-                body: "You're driving and using micromobility but not willing to walk any distance. Consider adjusting your walk distance to see recommendations.",
-                isNoOptions: true
-              };
-            } else {
-              recommendation = {
-                title: "Park farther, use Lime for last mile",
-                body: "Park in a less crowded area and use a Lime scooter or bike for the final stretch.",
-                badge: "Flexible",
-              };
-              steps.push(
-                { title: "Park farther from destination", description: `Find parking away from the destination where spots are easier to find. Look for areas with less competition.` },
-                { title: "Find and ride a Lime scooter or bike", description: "Open the Lime app and locate the nearest available scooter or bike. Unlock it and ride directly to your destination." }
-              );
-            }
-          } else {
-            // Drive only
-            if (walkMiles === 0) {
-              recommendation = {
-                title: "No options available",
-                body: "You're driving but not willing to walk any distance. Consider adjusting your walk distance to see recommendations.",
-                isNoOptions: true
-              };
-            } else {
-              // Park near destination - prioritize cheaper options if willing to walk
-              // Parking rates for 4 hours: affordable lots $8-$10, premium ramps $20-$24
-              if (walkMiles > 0 && costDollars >= 8) {
-                // Willing to walk - always recommend cheaper lots to save money
-                recommendation = {
-                  title: "Park at affordable lot and walk",
-                  body: `Park at a more affordable lot (around $8-$10 for 4 hours) within ${walkMiles.toFixed(1)} miles of Van Andel Arena and walk the rest of the way. This saves money compared to premium ramps.`,
-                  badge: "Budget-friendly",
-                };
-                const affordableParkingUrl = "https://www.google.com/maps/search/?api=1&query=parking+lot+near+Ottawa+and+Fulton,+Grand+Rapids,+MI";
-                steps.push(
-                  { 
-                    title: "Find affordable parking lot", 
-                    description: "Look for parking lots near Ottawa and Fulton streets, or Market Street Lot. These typically cost $8-$10 for 4 hours and are within walking distance.",
-                    link: affordableParkingUrl,
-                    linkText: "Find lots on Google Maps"
-                  },
-                  { title: "Park and walk", description: `Park your car and walk up to ${walkMiles.toFixed(1)} miles to ${state.destination}.` }
-                );
-                
-                // Alternate: free street parking (discouraged - driving around)
-                const altSteps = [];
-                const streetParkingUrl = "https://www.google.com/maps/search/?api=1&query=street+parking+near+Van+Andel+Arena,+Grand+Rapids,+MI";
-                altSteps.push(
-                  { 
-                    title: "Spend 15 minutes in traffic looking for free street parking", 
-                    description: "Circle the blocks near Van Andel Arena looking for free street parking. Meters are typically free after 7 PM on weekdays and all day on weekends. Be aware of odd-even parking restrictions from November 1 to April 1. This may take 15+ minutes of driving in traffic.",
-                    link: streetParkingUrl,
-                    linkText: "View area on Google Maps"
-                  },
-                  { title: "Park and walk", description: `Once you find a spot, park and walk up to ${walkMiles.toFixed(1)} miles to ${state.destination}.` }
-                );
-                alternate = {
-                  title: "Find free street parking",
-                  body: "Spend 15 minutes in traffic circling the area near Van Andel Arena to find free street parking. Meters are free after 7 PM on weekdays and all day on weekends.",
-                  steps: altSteps
-                };
-              } else if (costDollars < 8) {
-                // Too low for paid parking - free street parking is only option (but discouraged)
-                recommendation = {
-                  title: "Find free street parking",
-                  body: "Spend 15 minutes in traffic circling the area near Van Andel Arena to find free street parking. Meters are free after 7 PM on weekdays and all day on weekends.",
-                  badge: "Free",
-                  isDiscouraged: true, // Mark as discouraged (yellow card)
-                };
-                const streetParkingUrl = "https://www.google.com/maps/search/?api=1&query=street+parking+near+Van+Andel+Arena,+Grand+Rapids,+MI";
-                steps.push(
-                  { 
-                    title: "Spend 15 minutes in traffic looking for free street parking", 
-                    description: "Circle the blocks near Van Andel Arena looking for free street parking. Meters are typically free after 7 PM on weekdays and all day on weekends. Be aware of odd-even parking restrictions from November 1 to April 1. This may take 15+ minutes of driving in traffic.",
-                    link: streetParkingUrl,
-                    linkText: "View area on Google Maps"
-                  },
-                  { title: "Park and walk", description: `Once you find a spot, park and walk up to ${walkMiles.toFixed(1)} miles to ${state.destination}.` }
-                );
-              } else {
-                // Not willing to walk or budget >= $15 - recommend closer premium ramps
-                recommendation = {
-                  title: "Park at nearby ramp",
-                  body: `Park at a ramp close to Van Andel Arena (around $20-$24 for 4 hours) for convenient access.`,
-                  badge: "Convenient",
-                };
-                const premiumParkingUrl = "https://www.google.com/maps/search/?api=1&query=Studio+Park+Ramp+or+Louis+Campau+Ramp,+Grand+Rapids,+MI";
-                steps.push(
-                  { 
-                    title: "Park at nearby ramp", 
-                    description: "Use Studio Park Ramp, Louis Campau Ramp, or Ellis Parking ramps for close, convenient parking. Rates are typically $20-$24 for 4 hours, higher during events.",
-                    link: premiumParkingUrl,
-                    linkText: "Find ramps on Google Maps"
-                  },
-                  { title: "Walk to destination", description: `Walk from the ramp to ${state.destination}.` }
-                );
-                
-                // Alternate: free street parking (discouraged - driving around)
-                const altSteps = [];
-                const streetParkingUrl = "https://www.google.com/maps/search/?api=1&query=street+parking+near+Van+Andel+Arena,+Grand+Rapids,+MI";
-                altSteps.push(
-                  { 
-                    title: "Spend 15 minutes in traffic looking for free street parking", 
-                    description: "Circle the blocks near Van Andel Arena looking for free street parking. Meters are typically free after 7 PM on weekdays and all day on weekends. Be aware of odd-even parking restrictions from November 1 to April 1. This may take 15+ minutes of driving in traffic.",
-                    link: streetParkingUrl,
-                    linkText: "View area on Google Maps"
-                  },
-                  { title: "Park and walk", description: `Once you find a spot, park and walk to ${state.destination}.` }
-                );
-                alternate = {
-                  title: "Find free street parking",
-                  body: "Spend 15 minutes in traffic circling the area near Van Andel Arena to find free street parking. Meters are free after 7 PM on weekdays and all day on weekends.",
-                  steps: altSteps
-                };
-              }
-              
-            }
-          }
-        } else if (hasTransit) {
-          // Transit mode
-          const transitUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(state.destination + ", Grand Rapids, MI")}&travelmode=transit`;
-          if (hasShuttle) {
-            // Transit + Shuttle: Take Rapid, then DASH
-            if (costDollars === 0) {
-              recommendation = {
-                title: "No options available",
-                body: "You're taking The Rapid but not willing to pay any amount. Consider adjusting your budget to see recommendations.",
-                isNoOptions: true
-              };
-            } else if (walkMiles === 0) {
-              recommendation = {
-                title: "No options available",
-                body: "You're taking The Rapid and using DASH but not willing to walk any distance. Consider adjusting your walk distance to see recommendations.",
-                isNoOptions: true
-              };
-            } else {
-              recommendation = {
-                title: "Take Rapid, then DASH",
-                body: "Ride The Rapid to downtown, then use the free DASH shuttle to get closer to your destination.",
-                badge: "Efficient",
-              };
-              steps.push(
-                { title: "Board The Rapid", description: "Go to your nearest Rapid stop and board the bus. Ride to a downtown stop that's near a DASH connection point.", link: transitUrl, linkText: "View transit route on Google Maps" },
-                { title: "Transfer to DASH", description: "Get off The Rapid and walk to the nearest DASH stop. Board the free DASH shuttle and ride it closer to your destination." },
-                { title: "Walk to destination", description: "Get off the DASH shuttle and walk the remaining distance to your destination." }
-              );
-            }
-          } else {
-            // Transit only
-            if (costDollars === 0) {
-              recommendation = {
-                title: "No options available",
-                body: "You're taking The Rapid but not willing to pay any amount. Consider adjusting your budget to see recommendations.",
-                isNoOptions: true
-              };
-            } else if (walkMiles === 0) {
-              recommendation = {
-                title: "No options available",
-                body: "You're taking The Rapid but not willing to walk any distance. Consider adjusting your walk distance to see recommendations.",
-                isNoOptions: true
-              };
-            } else {
-              recommendation = {
-                title: "The Rapid + short walk",
-                body: `Plan your route to a Rapid stop near your destination. Avoid transfers if possible. After getting off, walk the remaining distance.`,
-                badge: "Chill",
-              };
-              steps.push(
-                { title: "Take The Rapid", description: `Go to your nearest Rapid stop and board the bus. Ride to a stop near your destination. Avoid transfers if possible.`, link: transitUrl, linkText: "View transit route on Google Maps" },
-                { title: "Walk to destination", description: "Get off The Rapid and walk the remaining distance to your destination." }
-              );
-            }
-          }
-        } else if (hasRideshare) {
-          // Rideshare mode
-          if (costDollars === 0) {
-            recommendation = {
-              title: "No options available",
-              body: "You're requesting an Uber/Lyft but not willing to pay any amount. Consider adjusting your budget to see recommendations.",
-              isNoOptions: true
-            };
-          } else {
-            recommendation = {
-              title: "Request an Uber/Lyft to your destination",
-              body: `Request an Uber or Lyft and get dropped off at your destination.`,
-              badge: "Door-to-door",
-            };
-            steps.push(
-              { title: "Request an Uber/Lyft", description: `Open your Uber or Lyft app and request a ride. Set your destination and confirm the ride.` },
-              { title: "Arrive at destination", description: "Wait for your driver to arrive, then ride to your destination. The driver will drop you off as close as possible." }
-            );
-          }
-        } else if (hasMicromobility) {
-          // Micromobility mode
-          if (costDollars === 0) {
-            recommendation = {
-              title: "No options available",
-              body: "You're looking for a Lime scooter or bike but not willing to pay any amount. Consider adjusting your budget to see recommendations.",
-              isNoOptions: true
-            };
-          } else {
-            recommendation = {
-              title: "Find and ride a Lime scooter or bike",
-              body: `Open the Lime app and find the nearest available scooter or bike. Unlock it and ride directly to your destination.`,
-              badge: "On-demand",
-            };
-            steps.push(
-              { title: "Find a Lime scooter or bike", description: `Open the Lime app and locate the nearest available scooter or bike near your starting location.` },
-              { title: "Ride to destination", description: "Unlock the scooter or bike and ride directly to your destination." }
-            );
-          }
-        } else if (hasShuttle) {
-          // Shuttle mode (DASH)
-          if (walkMiles === 0) {
-            recommendation = {
-              title: "No options available",
-              body: "You're using DASH but not willing to walk any distance. Consider adjusting your walk distance to see recommendations.",
-              isNoOptions: true
-            };
-          } else {
-            recommendation = {
-              title: "Take the DASH shuttle",
-              body: `Use the free DASH downtown shuttle to get closer to your destination, then walk the remaining distance.`,
-              badge: "Free",
-            };
-            steps.push(
-              { title: "Find a DASH stop", description: `Locate the nearest DASH shuttle stop near your starting location.` },
-              { title: "Board the DASH shuttle", description: "Wait for the next DASH shuttle and board it. The shuttle is free and runs through downtown Grand Rapids." },
-              { title: "Walk to destination", description: "Get off the DASH shuttle at a stop near your destination and walk the remaining distance." }
-            );
-          }
-        } else if (hasBike) {
-          // Bike mode
-          recommendation = {
-            title: "Bike to your destination and lock up nearby",
-            body: `Ride your bike to your destination. Find a bike rack or secure post near the entrance to lock up. This avoids parking entirely.`,
-            badge: "No parking",
-          };
-          steps.push(
-            { title: "Ride your bike to destination", description: `Ride your bike to your destination.` },
-            { title: "Lock up your bike", description: "Find a bike rack or secure post near the entrance and lock up your bike." }
-          );
-        }
-
-        recommendation.steps = steps;
-        return { primary: recommendation, alternate: alternate };
-      }
-
-      // init
-      // Read from URL fragment
-      const params = parseFragment();
-      if (params.modes) {
-        const modesArray = params.modes.split(',').filter(m => validModes.includes(m));
-        if (modesArray.length > 0) {
-          state.modes = modesArray;
-        }
-      }
-      
-      // Set default cost based on primary mode
-      const primaryMode = state.modes.length > 0 ? state.modes[0] : "drive";
-      if (primaryMode === "micromobility" && state.costDollars === 10) {
-        state.costDollars = 4;
-        costSlider.value = 4;
-      } else if (primaryMode === "rideshare" && state.costDollars === 10) {
-        state.costDollars = 15;
-        costSlider.value = 15;
-      }
-      if (params.day) {
-        state.day = params.day;
-        dayChanged = true; // Mark as changed since it came from fragment
-      }
-      if (params.time) {
-        state.time = params.time;
-        timeChanged = true; // Mark as changed since it came from fragment
-      }
-      if (params.people) {
-        const peopleValue = Number(params.people);
-        if (peopleValue >= 1 && peopleValue <= 6) {
-          state.people = peopleValue;
-          peopleChanged = true; // Mark as changed since it came from fragment
-        }
-      }
-      
-      // Generate time options and initialize inputs
-      generateTimeOptions();
-      daySelect.value = state.day;
-      timeSelect.value = state.time;
-        document.getElementById("peopleCount").textContent = state.people;
-
-      // Initialize walk time estimate
-      const walkTimeValue = document.getElementById("walkTimeValue");
-      if (walkTimeValue) {
-        const walkMinutes = Math.round(state.walkMiles * 20); // 3 mph = 20 min per mile
-        walkTimeValue.textContent = walkMinutes;
-      }
-
-        costSlider.value = state.costDollars;
-      earlySlider.value = state.flexibilityEarlyMins;
-      lateSlider.value = state.flexibilityLateMins;
-      document.getElementById("earlyValue").textContent = `-${state.flexibilityEarlyMins}`;
-      document.getElementById("lateValue").textContent = `+${state.flexibilityLateMins}`;
-      
-      // Update Google Maps directions link
-      updateDirectionsLink();
-      
-      // Reset function to clear all URL fragments and reset state
-      function resetAll() {
-        // Reset state to defaults
-        const defaultTime = getDefaultTime();
-        state.destination = "Van Andel Arena";
-        state.day = "today";
-        state.time = defaultTime;
-        state.flexibilityEarlyMins = 15;
-        state.flexibilityLateMins = 0;
-        state.modes = [];
-        state.people = 1;
-        state.walkMiles = 0.5;
-        state.parkingMins = 10;
-        state.costDollars = 10;
-        
-        // Reset change flags
-        dayChanged = false;
-        timeChanged = false;
-        peopleChanged = false;
-        
-        // Clear URL fragment completely
-        if (window.history.replaceState) {
-          window.history.replaceState(null, '', window.location.pathname + window.location.search);
-        } else {
-          window.location.hash = '';
-        }
-        
-        // Reset UI elements
-        daySelect.value = state.day;
-        timeSelect.value = state.time;
-        document.getElementById("peopleCount").textContent = state.people;
-        costSlider.value = state.costDollars;
-        earlySlider.value = state.flexibilityEarlyMins;
-        lateSlider.value = state.flexibilityLateMins;
-        document.getElementById("earlyValue").textContent = `-${state.flexibilityEarlyMins}`;
-        document.getElementById("lateValue").textContent = `+${state.flexibilityLateMins}`;
-        
-        // Reset walk slider
-        walkSlider.value = state.walkMiles;
-        const walkValue = document.getElementById("walkValue");
-        const walkUnit = document.getElementById("walkUnit");
-        const walkTime = document.getElementById("walkTime");
-        const walkTimeValue = document.getElementById("walkTimeValue");
-        if (walkValue) walkValue.textContent = state.walkMiles.toFixed(1);
-        if (walkUnit) walkUnit.textContent = " miles";
-        if (walkTimeValue) {
-          const walkMinutes = Math.round(state.walkMiles * 20);
-          walkTimeValue.textContent = walkMinutes;
-        }
-        if (walkTime) walkTime.style.display = "inline";
-        
-        // Reset cost display
-        const costValue = document.getElementById("costValue");
-        const costPrefix = document.getElementById("costPrefix");
-        if (costValue) costValue.textContent = state.costDollars.toFixed(2);
-        if (costPrefix) costPrefix.textContent = "$";
-        
-        // Update UI
-        highlightMode();
-        updatePreferencesVisibility();
-        updateDirectionsLink();
-        renderResults();
-      }
-      
-      // Attach reset button event listener
-      const resetButton = document.getElementById("resetButton");
-      if (resetButton) {
-        resetButton.addEventListener("click", resetAll);
-      }
-      
-      // Attach mode button event listeners
-      document.querySelectorAll(".modeBtn").forEach((btn) => {
-        btn.addEventListener("click", function() {
-          const mode = this.dataset.mode;
-          if (mode) {
-            toggleMode(mode);
-          }
-        });
-      });
-      
-      highlightMode();
-      updatePreferencesVisibility();
-      renderResults();
-    </script>
+    <script src="script.js"></script>
   </body>
 </html>

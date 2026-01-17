@@ -1,5 +1,9 @@
 .PHONY: all
-all:
+all: format
+
+.PHONY: format
+format:
+	npx --yes prettier --write .
 
 .PHONY: run
 run:
