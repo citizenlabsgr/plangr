@@ -348,4 +348,46 @@ test.describe("Parking Enforcement Logic", () => {
     expect(resultsText).toContain("No options available");
     expect(resultsText).toContain("Parking meters are enforced until 7 PM");
   });
+
+  test("should not show clear button when only time is set", async ({
+    page,
+  }) => {
+    // Test: Only time is set in URL (7:00 AM = 07:00)
+    await page.goto(`${BASE_URL}#time=700`);
+    await page.waitForTimeout(500);
+
+    // Check that reset button is hidden (since day hasn't been changed)
+    const resetButton = page.locator("#resetButton");
+    await expect(resetButton).toHaveClass(/hidden/);
+
+    // Since day defaults to "today" and destination is set, all three fields are filled
+    // So the card should be auto-collapsed (minimized view visible, content hidden)
+    const whereWhenContent = page.locator("#whereWhenContent");
+    const whereWhenMinimized = page.locator("#whereWhenMinimized");
+    await expect(whereWhenContent).toHaveClass(/hidden/);
+    await expect(whereWhenMinimized).not.toHaveClass(/hidden/);
+  });
+
+  test("should collapse location card when all three inputs have values on page refresh", async ({
+    page,
+  }) => {
+    // Test: All three inputs (destination, day, time) have values
+    // Destination is always set, day defaults to "today", so we just need to set time
+    await page.goto(`${BASE_URL}#time=700`);
+    await page.waitForTimeout(500);
+
+    // Check that the card is collapsed (minimized view is visible, content is hidden)
+    const whereWhenContent = page.locator("#whereWhenContent");
+    const whereWhenMinimized = page.locator("#whereWhenMinimized");
+
+    await expect(whereWhenContent).toHaveClass(/hidden/);
+    await expect(whereWhenMinimized).not.toHaveClass(/hidden/);
+
+    // Also test with explicit day and time
+    await page.goto(`${BASE_URL}#day=monday&time=800`);
+    await page.waitForTimeout(500);
+
+    await expect(whereWhenContent).toHaveClass(/hidden/);
+    await expect(whereWhenMinimized).not.toHaveClass(/hidden/);
+  });
 });

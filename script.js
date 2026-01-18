@@ -84,7 +84,7 @@ function getDefaultTime() {
 // Generate time options for dropdown (half-hour increments, starting at 5pm, ending at 10pm)
 function generateTimeOptions() {
   const timeSelect = document.getElementById("timeSelect");
-  const options = ['<option value="">Select a time</option>']; // Add empty default option
+  const options = ['<option value="" disabled>Select a time</option>']; // Add empty default option (disabled to show lighter)
   // Start at 5pm (17:00) and go through 10pm (22:00)
   for (let hour = 17; hour <= 22; hour++) {
     for (let minute of [0, 30]) {
@@ -272,6 +272,22 @@ function updateDirectionsLink() {
   directionsLinkText.textContent = linkText;
 }
 
+// Update reset modes button visibility based on whether preferences are selected
+function updateResetModesButtonVisibility() {
+  const resetModesBtn = document.getElementById("resetModesButton");
+  if (!resetModesBtn) return;
+
+  // Show button if modes are selected, or walk/cost have been changed
+  const hasPreferences =
+    (state.modes && state.modes.length > 0) || walkChanged || costChanged;
+
+  if (hasPreferences) {
+    resetModesBtn.classList.remove("hidden");
+  } else {
+    resetModesBtn.classList.add("hidden");
+  }
+}
+
 function updatePreferencesVisibility() {
   const walkSlider = document.getElementById("walkSlider");
   const costSlider = document.getElementById("costSlider");
@@ -369,6 +385,7 @@ function toggleMode(mode) {
 
   highlightMode();
   updatePreferencesVisibility();
+  updateResetModesButtonVisibility();
   updateResults();
   updateFragment();
 }
@@ -456,6 +473,7 @@ walkSlider.addEventListener("input", (e) => {
     if (walkTimeValue) walkTimeValue.textContent = walkMinutes;
     if (walkTime) walkTime.style.display = "inline";
   }
+  updateResetModesButtonVisibility();
   updateFragment();
   updateResults();
 });
@@ -475,6 +493,7 @@ costSlider.addEventListener("input", (e) => {
     costValue.textContent = Math.round(displayCost);
     costPrefix.textContent = "$";
   }
+  updateResetModesButtonVisibility();
   updateFragment();
   updateResults();
 });
@@ -548,19 +567,18 @@ function updateModesSectionState() {
   }
 }
 
-// Update minimize button visibility based on required fields
+// Update reset button visibility based on required fields
 function updateMinimizeButtonState() {
-  const allFieldsFilled = checkRequiredFields();
+  const resetBtn = document.getElementById("resetButton");
   // Only update if the card is not collapsed (minimized view is hidden)
-  if (
-    whereWhenToggle &&
-    whereWhenMinimized &&
-    whereWhenMinimized.classList.contains("hidden")
-  ) {
-    if (allFieldsFilled) {
-      whereWhenToggle.classList.remove("hidden");
-    } else {
-      whereWhenToggle.classList.add("hidden");
+  if (whereWhenMinimized && whereWhenMinimized.classList.contains("hidden")) {
+    // Reset button can be shown independently in top right if there's anything to clear
+    if (resetBtn) {
+      if (dayChanged || timeChanged) {
+        resetBtn.classList.remove("hidden");
+      } else {
+        resetBtn.classList.add("hidden");
+      }
     }
   }
 }
@@ -587,10 +605,8 @@ timeSelect.addEventListener("change", (e) => {
 });
 
 // Where/When toggle (minimize button)
-const whereWhenToggle = document.getElementById("whereWhenToggle");
 const whereWhenContent = document.getElementById("whereWhenContent");
 const whereWhenMinimized = document.getElementById("whereWhenMinimized");
-const whereWhenIcon = document.getElementById("whereWhenIcon");
 const whereWhenExpand = document.getElementById("whereWhenExpand");
 
 function updateMinimizedView() {
@@ -651,20 +667,33 @@ function minimizeWhereWhen() {
   updateMinimizedView();
   whereWhenContent.classList.add("hidden");
   whereWhenMinimized.classList.remove("hidden");
-  whereWhenToggle.classList.add("hidden"); // Hide minimize button when collapsed
+  // Show reset button in top right when minimized, but only if day has been changed (something to clear)
+  const resetBtn = document.getElementById("resetButton");
+  if (resetBtn) {
+    if (dayChanged) {
+      resetBtn.classList.remove("hidden");
+    } else {
+      resetBtn.classList.add("hidden");
+    }
+  }
 }
 
 function expandWhereWhen() {
   whereWhenContent.classList.remove("hidden");
   whereWhenMinimized.classList.add("hidden");
-  whereWhenToggle.classList.remove("hidden"); // Show minimize button when expanded
-  // Rotate icon back to down (collapsed state)
-  if (whereWhenIcon) {
-    whereWhenIcon.style.transform = "rotate(0deg)";
+  // Update reset button visibility when expanded
+  updateMinimizeButtonState();
+  // Show reset button in top right when expanded, if there's anything to clear (day or time changed)
+  const resetBtn = document.getElementById("resetButton");
+  if (resetBtn) {
+    if (dayChanged || timeChanged) {
+      resetBtn.classList.remove("hidden");
+    } else {
+      resetBtn.classList.add("hidden");
+    }
   }
 }
 
-whereWhenToggle.addEventListener("click", minimizeWhereWhen);
 whereWhenExpand.addEventListener("click", expandWhereWhen);
 
 // Flexibility toggle
@@ -1272,8 +1301,8 @@ async function init() {
   }
   document.getElementById("peopleCount").textContent = state.people;
 
-  // Collapse where/when card if time is in fragment
-  if (params.time && whereWhenContent && whereWhenMinimized) {
+  // Collapse where/when card if all three required fields (destination, day, time) have values
+  if (checkRequiredFields() && whereWhenContent && whereWhenMinimized) {
     minimizeWhereWhen();
   } else {
     // Update minimized view in case it's visible (shouldn't be, but just in case)
@@ -1303,6 +1332,7 @@ async function init() {
   updateMinimizeButtonState(); // Set initial minimize button state
   highlightMode();
   updatePreferencesVisibility();
+  updateResetModesButtonVisibility();
   renderResults();
 
   // Expose state on window for testing
@@ -1386,12 +1416,53 @@ function resetAll() {
   renderResults();
 }
 
+// Reset function to clear selected modes and preferences (walk/pay)
+function resetModes() {
+  // Remove modes, walk, and pay from URL fragment and reload
+  const params = parseFragment();
+  const newParts = [];
+
+  // Keep only day, time, and people if they exist
+  if (params.day) {
+    newParts.push(`day=${encodeURIComponent(params.day)}`);
+  }
+  if (params.time) {
+    newParts.push(`time=${timeToUrl(params.time)}`);
+  }
+  if (params.people) {
+    newParts.push(`people=${encodeURIComponent(params.people)}`);
+  }
+
+  // Update URL without modes, walk, or pay
+  const newHash = newParts.length > 0 ? `#${newParts.join("&")}` : "";
+  if (window.history.replaceState) {
+    window.history.replaceState(
+      null,
+      "",
+      window.location.pathname + window.location.search + newHash,
+    );
+  } else {
+    window.location.hash = newHash;
+  }
+
+  // Reload the page to reset state
+  window.location.reload();
+}
+
 // Attach reset button event listener
 const resetButton = document.getElementById("resetButton");
 if (resetButton) {
   resetButton.addEventListener("click", () => {
     // Navigate to the page without the fragment to clear all state
     window.location.href = window.location.pathname + window.location.search;
+  });
+}
+
+// Attach reset modes button event listener
+const resetModesButton = document.getElementById("resetModesButton");
+if (resetModesButton) {
+  resetModesButton.addEventListener("click", () => {
+    resetModes();
   });
 }
 

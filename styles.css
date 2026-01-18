@@ -7,3 +7,12 @@
   pointer-events: none;
   cursor: not-allowed;
 }
+
+/* Make the placeholder option in time select lighter */
+#timeSelect option[value=""] {
+  color: rgb(148 163 184); /* slate-400 */
+}
+
+#timeSelect option:disabled {
+  color: rgb(148 163 184); /* slate-400 */
+}
