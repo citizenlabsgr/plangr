@@ -93,7 +93,7 @@ function generateTimeOptions() {
       const timeValue =
         String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0");
       const timeDisplay = new Date(
-        `2000-01-01T${timeValue}`
+        `2000-01-01T${timeValue}`,
       ).toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",
@@ -133,14 +133,24 @@ function timeFromUrl(urlTime) {
     const hour12 = parseInt(urlTime[0], 10);
     const minutes = urlTime.slice(1);
     // All times are PM (5pm-10pm range)
-    const hour24 = hour12 === 12 ? 12 : hour12 + 12;
+    const hour24 = hour12 + 12;
     return hour24.toString().padStart(2, "0") + ":" + minutes;
   } else if (urlTime.length === 4) {
     // Format: HHMM (e.g., "1000" = 10:00 PM = 22:00)
-    const hour12 = parseInt(urlTime.slice(0, 2), 10);
+    // Handle both 12-hour format (10-12) and 24-hour format (17-22) for backwards compatibility
+    const hourPart = parseInt(urlTime.slice(0, 2), 10);
     const minutes = urlTime.slice(2);
-    // All times are PM (5pm-10pm range)
-    const hour24 = hour12 === 12 ? 12 : hour12 + 12;
+    let hour24;
+    if (hourPart >= 17 && hourPart <= 22) {
+      // Already in 24-hour format (for backwards compatibility)
+      hour24 = hourPart;
+    } else if (hourPart >= 10 && hourPart <= 12) {
+      // 10pm-12pm in 12-hour format
+      hour24 = hourPart === 12 ? 12 : hourPart + 12;
+    } else {
+      // 5-9 in 12-hour format (should use 3-digit format, but handle 2-digit here too)
+      hour24 = hourPart + 12;
+    }
     return hour24.toString().padStart(2, "0") + ":" + minutes;
   }
   return urlTime; // Fallback if already in HH:MM format
@@ -210,7 +220,7 @@ function updateDirectionsLink() {
   if (!directionsLink || !directionsLinkText) return;
 
   const destination = encodeURIComponent(
-    state.destination + ", Grand Rapids, MI"
+    state.destination + ", Grand Rapids, MI",
   );
   let linkUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
   let linkText = "Get directions on Google Maps";
@@ -293,9 +303,8 @@ function updatePreferencesVisibility() {
       state.modes.includes("transit") || state.modes.includes("micromobility")
         ? state.costDollars * state.people
         : state.costDollars;
-    // Format to 2 decimal places, but show as integer if it's a whole number
-    costValue.textContent =
-      displayCost % 1 === 0 ? displayCost : displayCost.toFixed(2);
+    // Show as whole dollar amount
+    costValue.textContent = Math.round(displayCost);
     costPrefix.textContent = "$";
   }
 
@@ -375,8 +384,10 @@ window.addEventListener("hashchange", () => {
   }
   if (params.people !== undefined && params.people !== state.people) {
     const peopleValue = Number(params.people);
-    if (peopleValue >= 1 && peopleValue <= 6) {
-      state.people = peopleValue;
+    // Clamp to valid range (1-6)
+    const clampedValue = Math.max(1, Math.min(6, peopleValue));
+    if (clampedValue >= 1 && clampedValue <= 6) {
+      state.people = clampedValue;
       document.getElementById("peopleCount").textContent = state.people;
       peopleChanged = true;
     }
@@ -445,9 +456,8 @@ costSlider.addEventListener("input", (e) => {
       state.modes.includes("transit") || state.modes.includes("micromobility")
         ? state.costDollars * state.people
         : state.costDollars;
-    // Format to 2 decimal places, but show as integer if it's a whole number
-    costValue.textContent =
-      displayCost % 1 === 0 ? displayCost : displayCost.toFixed(2);
+    // Show as whole dollar amount
+    costValue.textContent = Math.round(displayCost);
     costPrefix.textContent = "$";
   }
   updateResults();
@@ -593,7 +603,7 @@ function updateMinimizedView() {
   }
 
   const minimizedTimeSeparator = document.getElementById(
-    "minimizedTimeSeparator"
+    "minimizedTimeSeparator",
   );
   if (minimizedTime && state) {
     if (state.time) {
@@ -679,17 +689,15 @@ peopleToggle.addEventListener("click", () => {
 
 earlySlider.addEventListener("input", (e) => {
   state.flexibilityEarlyMins = Number(e.target.value);
-  document.getElementById(
-    "earlyValue"
-  ).textContent = `-${state.flexibilityEarlyMins}`;
+  document.getElementById("earlyValue").textContent =
+    `-${state.flexibilityEarlyMins}`;
   updateResults();
 });
 
 lateSlider.addEventListener("input", (e) => {
   state.flexibilityLateMins = Number(e.target.value);
-  document.getElementById(
-    "lateValue"
-  ).textContent = `+${state.flexibilityLateMins}`;
+  document.getElementById("lateValue").textContent =
+    `+${state.flexibilityLateMins}`;
   updateResults();
 });
 
@@ -708,8 +716,8 @@ function renderResults() {
   card.className = isNoOptions
     ? "rounded-none bg-red-50 border border-red-200 p-6"
     : isDiscouraged
-    ? "rounded-none bg-yellow-50 border border-yellow-200 p-6"
-    : "rounded-none bg-green-50 border border-green-200 p-6";
+      ? "rounded-none bg-yellow-50 border border-yellow-200 p-6"
+      : "rounded-none bg-green-50 border border-green-200 p-6";
 
   const recommendation = primary;
 
@@ -773,7 +781,7 @@ function renderResults() {
                   }
                 </div>
               </li>
-            `
+            `,
               )
               .join("")}
           </ol>
@@ -865,7 +873,7 @@ function renderResults() {
                     }
                   </div>
                 </li>
-              `
+              `,
                 )
                 .join("")}
             </ol>
@@ -935,13 +943,13 @@ function processRecommendationData(recData, values) {
       if (processedStep.description) {
         processedStep.description = replacePlaceholders(
           processedStep.description,
-          values
+          values,
         );
       }
       if (processedStep.linkTemplate) {
         processedStep.link = replacePlaceholders(
           processedStep.linkTemplate,
-          values
+          values,
         );
         delete processedStep.linkTemplate;
       }
@@ -953,7 +961,7 @@ function processRecommendationData(recData, values) {
   if (processed.alternate) {
     processed.alternate = processRecommendationData(
       processed.alternate,
-      values
+      values,
     );
   }
 
@@ -974,7 +982,7 @@ function buildRecommendation() {
     walkMiles: walkMiles.toFixed(1),
     destination: state.destination,
     destinationEncoded: encodeURIComponent(
-      state.destination + ", Grand Rapids, MI"
+      state.destination + ", Grand Rapids, MI",
     ),
   };
 
@@ -1159,8 +1167,10 @@ async function init() {
   }
   if (params.people) {
     const peopleValue = Number(params.people);
-    if (peopleValue >= 1 && peopleValue <= 6) {
-      state.people = peopleValue;
+    // Clamp to valid range (1-6)
+    const clampedValue = Math.max(1, Math.min(6, peopleValue));
+    if (clampedValue >= 1 && clampedValue <= 6) {
+      state.people = clampedValue;
       peopleChanged = true; // Mark as changed since it came from fragment
     }
   }
@@ -1193,12 +1203,10 @@ async function init() {
   costSlider.value = state.costDollars;
   earlySlider.value = state.flexibilityEarlyMins;
   lateSlider.value = state.flexibilityLateMins;
-  document.getElementById(
-    "earlyValue"
-  ).textContent = `-${state.flexibilityEarlyMins}`;
-  document.getElementById(
-    "lateValue"
-  ).textContent = `+${state.flexibilityLateMins}`;
+  document.getElementById("earlyValue").textContent =
+    `-${state.flexibilityEarlyMins}`;
+  document.getElementById("lateValue").textContent =
+    `+${state.flexibilityLateMins}`;
 
   // Update Google Maps directions link
   updateDirectionsLink();
@@ -1209,6 +1217,10 @@ async function init() {
   highlightMode();
   updatePreferencesVisibility();
   renderResults();
+
+  // Expose state on window for testing
+  window.state = state;
+  window.appData = appData;
 }
 
 // Reset function to clear all URL fragments and reset state
@@ -1235,7 +1247,7 @@ function resetAll() {
     window.history.replaceState(
       null,
       "",
-      window.location.pathname + window.location.search
+      window.location.pathname + window.location.search,
     );
   } else {
     window.location.hash = "";
@@ -1252,12 +1264,10 @@ function resetAll() {
   costSlider.value = state.costDollars;
   earlySlider.value = state.flexibilityEarlyMins;
   lateSlider.value = state.flexibilityLateMins;
-  document.getElementById(
-    "earlyValue"
-  ).textContent = `-${state.flexibilityEarlyMins}`;
-  document.getElementById(
-    "lateValue"
-  ).textContent = `+${state.flexibilityLateMins}`;
+  document.getElementById("earlyValue").textContent =
+    `-${state.flexibilityEarlyMins}`;
+  document.getElementById("lateValue").textContent =
+    `+${state.flexibilityLateMins}`;
 
   // Reset walk slider
   walkSlider.value = state.walkMiles;
@@ -1276,7 +1286,7 @@ function resetAll() {
   // Reset cost display
   const costValue = document.getElementById("costValue");
   const costPrefix = document.getElementById("costPrefix");
-  if (costValue) costValue.textContent = state.costDollars.toFixed(2);
+  if (costValue) costValue.textContent = Math.round(state.costDollars);
   if (costPrefix) costPrefix.textContent = "$";
 
   // Update UI
