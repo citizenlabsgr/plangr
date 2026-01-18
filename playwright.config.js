@@ -5,6 +5,7 @@ module.exports = defineConfig({
   workers: "100%",
   use: {
     baseURL: "http://localhost:8080",
+    actionTimeout: 5000,
   },
   projects: [
     {

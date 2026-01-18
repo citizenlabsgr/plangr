@@ -1,7 +1,7 @@
 .PHONY: install
 install:
 	npm install --no-save @playwright/test
-	npx playwright install chromium
+	npx playwright install
 
 .PHONY: all
 all: format test

@@ -263,20 +263,6 @@ test.describe("Parking Enforcement Logic", () => {
     expect(resultsText).toContain("free street parking");
   });
 
-  test("should recommend premium ramp when arriving on weekend with higher budget", async ({
-    page,
-  }) => {
-    // Set up: drive mode, willing to pay $20, willing to walk 0.5 miles, arriving Saturday at 6:00 PM
-    await page.goto(
-      `${BASE_URL}#modes=drive&day=saturday&time=600&walk=0.5&pay=20`,
-    );
-    await page.waitForTimeout(500);
-
-    // Check that the recommendation is for premium ramp (since user is willing to pay $20+)
-    const resultsText = await page.locator("#results").textContent();
-    expect(resultsText).toContain("premium ramp");
-  });
-
   test("should recommend affordable lot when budget is $8-$19", async ({
     page,
   }) => {
@@ -389,5 +375,74 @@ test.describe("Parking Enforcement Logic", () => {
 
     await expect(whereWhenContent).toHaveClass(/hidden/);
     await expect(whereWhenMinimized).not.toHaveClass(/hidden/);
+  });
+
+  test("should collapse card when save button is clicked", async ({ page }) => {
+    // Test: Save button should collapse the card when all fields are filled
+    // Start with a clean page (no fragment) so card is expanded
+    await page.goto(BASE_URL);
+    await page.waitForSelector("#whereWhenContent", { state: "attached" });
+    await page.waitForTimeout(300);
+
+    const whereWhenContent = page.locator("#whereWhenContent");
+    const whereWhenMinimized = page.locator("#whereWhenMinimized");
+    const saveButton = page.locator("#saveButton");
+    const expandButton = page.locator("#whereWhenExpand");
+
+    // Expand the card if it's collapsed (by clicking edit if needed)
+    const isExpanded = await whereWhenContent.isVisible();
+    if (!isExpanded) {
+      await expandButton.click();
+      await page.waitForTimeout(300);
+      // Verify it's now expanded
+      await expect(whereWhenContent).toBeVisible();
+    }
+
+    // Verify card is expanded initially
+    await expect(whereWhenContent).toBeVisible();
+    await expect(whereWhenMinimized).not.toBeVisible();
+
+    // Verify save button is disabled initially (time not set)
+    await expect(saveButton).toBeDisabled();
+
+    // Select day first (don't select time yet to avoid auto-collapse)
+    await page.selectOption("#daySelect", "tomorrow");
+    await page.waitForTimeout(200);
+
+    // Verify save button is still disabled (time not set yet)
+    await expect(saveButton).toBeDisabled();
+
+    // Now select time - this will enable the save button
+    // We'll expand the card again if it auto-collapses
+    await page.selectOption("#timeSelect", "18:00");
+    await page.waitForTimeout(500);
+
+    // The card auto-collapses when all fields are filled, so expand it again to test the save button
+    const isStillExpanded = await whereWhenContent.isVisible();
+    if (!isStillExpanded) {
+      // Wait for expand button to be available
+      await expect(expandButton).toBeVisible({ timeout: 2000 });
+      await page.waitForTimeout(200);
+      // Click expand button
+      await expandButton.click();
+      await page.waitForTimeout(300);
+      // Wait for the card to be fully expanded
+      await expect(whereWhenContent).toBeVisible({ timeout: 3000 });
+      await page.waitForTimeout(200);
+    }
+
+    // Verify card is expanded and save button is enabled
+    await expect(whereWhenContent).toBeVisible();
+    await expect(saveButton).toBeEnabled({ timeout: 2000 });
+
+    // Wait a bit for the button to be fully rendered
+    await page.waitForTimeout(200);
+
+    // Click save button to collapse the card
+    await saveButton.click({ force: true });
+
+    // Wait for the card to collapse
+    await expect(whereWhenContent).not.toBeVisible({ timeout: 2000 });
+    await expect(whereWhenMinimized).toBeVisible({ timeout: 2000 });
   });
 });

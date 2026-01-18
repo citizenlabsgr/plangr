@@ -8,11 +8,16 @@
   cursor: not-allowed;
 }
 
-/* Make the placeholder option in time select lighter */
-#timeSelect option[value=""] {
-  color: rgb(148 163 184); /* slate-400 */
+/* Make the placeholder option in time select gray */
+#timeSelect option[value=""]:disabled {
+  color: rgb(148 163 184) !important; /* slate-400 */
 }
 
 #timeSelect option:disabled {
+  color: rgb(148 163 184) !important; /* slate-400 */
+}
+
+/* When the select has no value selected, make the displayed text gray */
+#timeSelect.placeholder {
   color: rgb(148 163 184); /* slate-400 */
 }

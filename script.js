@@ -84,7 +84,7 @@ function getDefaultTime() {
 // Generate time options for dropdown (half-hour increments, starting at 5pm, ending at 10pm)
 function generateTimeOptions() {
   const timeSelect = document.getElementById("timeSelect");
-  const options = ['<option value="" disabled>Select a time</option>']; // Add empty default option (disabled to show lighter)
+  const options = ['<option value="" disabled>Select a time</option>']; // Add empty default option (disabled to show lighter color)
   // Start at 5pm (17:00) and go through 10pm (22:00)
   for (let hour = 17; hour <= 22; hour++) {
     for (let minute of [0, 30]) {
@@ -589,6 +589,7 @@ daySelect.addEventListener("change", (e) => {
   updateModesSectionState();
   updateMinimizeButtonState(); // Update minimize button state
   updateMinimizedView(); // Update minimized view if visible
+  updateSaveButtonState();
   updateFragment();
   updateResults();
 });
@@ -596,13 +597,44 @@ daySelect.addEventListener("change", (e) => {
 timeSelect.addEventListener("change", (e) => {
   state.time = e.target.value;
   timeChanged = true;
+  // Update placeholder styling
+  if (state.time) {
+    timeSelect.classList.remove("placeholder");
+  } else {
+    timeSelect.classList.add("placeholder");
+  }
   updateModesSectionState();
   updateMinimizeButtonState(); // Update minimize button state
   updateMinimizedView(); // Update minimized view if visible
+  updateSaveButtonState();
   // Always add time to fragment when user selects it
   updateFragment();
   updateResults();
 });
+
+// Update save button state based on required fields
+function updateSaveButtonState() {
+  const saveButton = document.getElementById("saveButton");
+  if (!saveButton) return;
+
+  const allFieldsFilled = checkRequiredFields();
+  saveButton.disabled = !allFieldsFilled;
+}
+
+// Save button click handler
+const saveButton = document.getElementById("saveButton");
+if (saveButton) {
+  saveButton.addEventListener("click", () => {
+    if (!checkRequiredFields()) return;
+
+    // Update fragment and results
+    updateFragment();
+    updateResults();
+
+    // Collapse the card after saving
+    minimizeWhereWhen();
+  });
+}
 
 // Where/When toggle (minimize button)
 const whereWhenContent = document.getElementById("whereWhenContent");
@@ -1111,8 +1143,12 @@ function buildRecommendation() {
       // If parking is free (after 7pm on weekdays or weekends) and user has low budget (< $8),
       // treat as $0 to recommend free street parking
       // If user is willing to pay $8+, use their actual budget to recommend paid parking
+      // Handle undefined costDollars (defaults to 0)
+      const safeCostDollars = costDollars ?? 0;
       const effectiveCostDollars =
-        !parkingEnforced && walkMiles > 0 && costDollars < 8 ? 0 : costDollars;
+        !parkingEnforced && walkMiles > 0 && safeCostDollars < 8
+          ? 0
+          : safeCostDollars;
 
       let recKey;
       if (walkMiles === 0) {
@@ -1296,10 +1332,15 @@ async function init() {
   daySelect.value = state.day;
   if (state.time) {
     timeSelect.value = state.time;
+    timeSelect.classList.remove("placeholder");
   } else {
     timeSelect.value = ""; // Clear time select if no time is set
+    timeSelect.classList.add("placeholder");
   }
   document.getElementById("peopleCount").textContent = state.people;
+
+  // Update save button state
+  updateSaveButtonState();
 
   // Collapse where/when card if all three required fields (destination, day, time) have values
   if (checkRequiredFields() && whereWhenContent && whereWhenMinimized) {
@@ -1413,6 +1454,7 @@ function resetAll() {
   highlightMode();
   updatePreferencesVisibility();
   updateDirectionsLink();
+  updateSaveButtonState();
   renderResults();
 }
 
