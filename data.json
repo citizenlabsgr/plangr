@@ -203,7 +203,7 @@
     "transit+shuttle": {
       "noCost": {
         "title": "No options available",
-        "body": "You're taking The Rapid but not willing to pay any amount. Consider adjusting your budget to see recommendations.",
+        "body": "The Rapid fare is $1.75. Consider adjusting your budget to see recommendations.",
         "isNoOptions": true
       },
       "noWalk": {
@@ -236,7 +236,7 @@
     "transit": {
       "noCost": {
         "title": "No options available",
-        "body": "You're taking The Rapid but not willing to pay any amount. Consider adjusting your budget to see recommendations.",
+        "body": "The Rapid fare is $1.75. Consider adjusting your budget to see recommendations.",
         "isNoOptions": true
       },
       "noWalk": {
@@ -265,11 +265,11 @@
     "rideshare": {
       "noCost": {
         "title": "No options available",
-        "body": "You're requesting an Uber/Lyft but not willing to pay any amount. Consider adjusting your budget to see recommendations.",
+        "body": "Rideshare services typically cost at least $10. Consider adjusting your budget to see recommendations.",
         "isNoOptions": true
       },
       "default": {
-        "title": "Request an Uber/Lyft to your destination",
+        "title": "Request a rideshare to your destination",
         "body": "Request an Uber or Lyft and get dropped off at your destination.",
         "badge": "Door-to-door",
         "steps": [
@@ -287,7 +287,7 @@
     "micromobility": {
       "noCost": {
         "title": "No options available",
-        "body": "You're looking for a Lime scooter or bike but not willing to pay any amount. Consider adjusting your budget to see recommendations.",
+        "body": "Lime typically costs at least $4. Consider adjusting your budget to see recommendations.",
         "isNoOptions": true
       },
       "default": {

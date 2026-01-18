@@ -108,10 +108,12 @@ function generateTimeOptions() {
 let state = null;
 let validModes = null;
 
-// Track if day/time/people have been changed from defaults
+// Track if day/time/people/walk/pay have been changed from defaults
 let dayChanged = false;
 let timeChanged = false;
 let peopleChanged = false;
+let walkChanged = false;
+let costChanged = false;
 
 // Convert time from HH:MM (24-hour) to HMM or HHMM (12-hour without colon) for URL
 // Times are 5pm-10pm, so we use 12-hour format: 17:00 -> "500", 20:30 -> "830", 22:00 -> "1000"
@@ -194,6 +196,12 @@ function updateFragment() {
   if (peopleChanged && state.people) {
     parts.push(`people=${encodeURIComponent(state.people)}`);
   }
+  if (walkChanged && state.walkMiles !== undefined) {
+    parts.push(`walk=${encodeURIComponent(state.walkMiles)}`);
+  }
+  if (costChanged && state.costDollars !== undefined) {
+    parts.push(`pay=${encodeURIComponent(state.costDollars)}`);
+  }
   window.location.hash = parts.length > 0 ? parts.join("&") : "";
 }
 
@@ -273,8 +281,10 @@ function updatePreferencesVisibility() {
   const costPrefix = document.getElementById("costPrefix");
   const costLabel = document.getElementById("costLabel");
 
-  // Walk slider: disabled for rideshare mode (everyone can walk a little)
-  const walkDisabled = state.modes.includes("rideshare");
+  // Walk slider: disabled only if rideshare is the ONLY mode (everyone can walk a little)
+  // If other modes are selected that need walking distance, keep it enabled
+  const walkDisabled =
+    state.modes.length === 1 && state.modes.includes("rideshare");
   const walkTime = document.getElementById("walkTime");
   const walkTimeValue = document.getElementById("walkTimeValue");
   walkSlider.disabled = walkDisabled;
@@ -291,8 +301,10 @@ function updatePreferencesVisibility() {
     if (walkTime) walkTime.style.display = "inline";
   }
 
-  // Cost slider: disabled for bike mode
-  const costDisabled = state.modes.includes("bike");
+  // Cost slider: disabled for bike mode (biking is free) or if shuttle is the only mode (DASH is free)
+  const costDisabled =
+    state.modes.includes("bike") ||
+    (state.modes.length === 1 && state.modes.includes("shuttle"));
   costSlider.disabled = costDisabled;
   if (costDisabled) {
     costValue.textContent = "—";
@@ -431,6 +443,7 @@ const costSlider = document.getElementById("costSlider");
 
 walkSlider.addEventListener("input", (e) => {
   state.walkMiles = Number(e.target.value);
+  walkChanged = true;
   const walkValue = document.getElementById("walkValue");
   const walkUnit = document.getElementById("walkUnit");
   const walkTime = document.getElementById("walkTime");
@@ -443,11 +456,13 @@ walkSlider.addEventListener("input", (e) => {
     if (walkTimeValue) walkTimeValue.textContent = walkMinutes;
     if (walkTime) walkTime.style.display = "inline";
   }
+  updateFragment();
   updateResults();
 });
 
 costSlider.addEventListener("input", (e) => {
   state.costDollars = Number(e.target.value);
+  costChanged = true;
   const costValue = document.getElementById("costValue");
   const costPrefix = document.getElementById("costPrefix");
   if (!costSlider.disabled) {
@@ -460,6 +475,7 @@ costSlider.addEventListener("input", (e) => {
     costValue.textContent = Math.round(displayCost);
     costPrefix.textContent = "$";
   }
+  updateFragment();
   updateResults();
 });
 
@@ -1048,9 +1064,9 @@ function buildRecommendation() {
   } else if (hasTransit) {
     // Transit mode
     if (hasShuttle) {
-      // Transit + Shuttle: Take Rapid, then DASH
+      // Transit + Shuttle: Take Rapid, then DASH - requires at least $2
       let recKey;
-      if (costDollars === 0) {
+      if (costDollars < 2) {
         recKey = "noCost";
       } else if (walkMiles === 0) {
         recKey = "noWalk";
@@ -1063,9 +1079,9 @@ function buildRecommendation() {
         steps.push(...recommendation.steps);
       }
     } else {
-      // Transit only
+      // Transit only - requires at least $2
       let recKey;
-      if (costDollars === 0) {
+      if (costDollars < 2) {
         recKey = "noCost";
       } else if (walkMiles === 0) {
         recKey = "noWalk";
@@ -1079,16 +1095,16 @@ function buildRecommendation() {
       }
     }
   } else if (hasRideshare) {
-    // Rideshare mode
-    const recKey = costDollars === 0 ? "noCost" : "default";
+    // Rideshare mode - requires at least $10
+    const recKey = costDollars < 10 ? "noCost" : "default";
     const recData = appData.recommendations.rideshare[recKey];
     recommendation = processRecommendationData(recData, placeholders);
     if (recommendation.steps) {
       steps.push(...recommendation.steps);
     }
   } else if (hasMicromobility) {
-    // Micromobility mode
-    const recKey = costDollars === 0 ? "noCost" : "default";
+    // Micromobility mode - requires at least $4
+    const recKey = costDollars < 4 ? "noCost" : "default";
     const recData = appData.recommendations.micromobility[recKey];
     recommendation = processRecommendationData(recData, placeholders);
     if (recommendation.steps) {
@@ -1174,6 +1190,24 @@ async function init() {
       peopleChanged = true; // Mark as changed since it came from fragment
     }
   }
+  if (params.walk) {
+    const walkValue = Number(params.walk);
+    if (!isNaN(walkValue) && walkValue >= 0) {
+      state.walkMiles = walkValue;
+      walkChanged = true; // Mark as changed since it came from fragment
+      walkSlider.value = walkValue;
+      updatePreferencesVisibility(); // Update UI
+    }
+  }
+  if (params.pay) {
+    const payValue = Number(params.pay);
+    if (!isNaN(payValue) && payValue >= 0) {
+      state.costDollars = payValue;
+      costChanged = true; // Mark as changed since it came from fragment
+      costSlider.value = payValue;
+      updatePreferencesVisibility(); // Update UI
+    }
+  }
 
   // Generate time options and initialize inputs
   generateTimeOptions();
@@ -1241,6 +1275,8 @@ function resetAll() {
   dayChanged = false;
   timeChanged = false;
   peopleChanged = false;
+  walkChanged = false;
+  costChanged = false;
 
   // Clear URL fragment completely
   if (window.history.replaceState) {
