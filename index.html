@@ -12,7 +12,7 @@
 
   <body class="bg-slate-50 text-slate-900">
     <main class="max-w-md mx-auto px-4 py-6">
-      <div class="space-y-6">
+      <div>
         <!-- Step 1: Destination, Day and Time -->
         <section
           class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 relative"
@@ -58,7 +58,7 @@
             <label class="block mt-4 text-sm font-medium">Day</label>
             <select
               id="daySelect"
-              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 bg-white"
+              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 pr-10 bg-white appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%236b7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22M6 8l4 4 4-4%22/%3E%3C/svg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
             >
               <option value="today">Today</option>
               <option value="tomorrow">Tomorrow</option>
@@ -74,7 +74,7 @@
             <label class="block mt-4 text-sm font-medium">Time</label>
             <select
               id="timeSelect"
-              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 bg-white"
+              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 pr-10 bg-white appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%236b7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22M6 8l4 4 4-4%22/%3E%3C/svg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
             ></select>
           </div>
 
@@ -172,7 +172,7 @@
         <!-- Step 2: Mode + People + Sliders -->
         <section
           id="preferencesSection"
-          class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mt-1 relative"
+          class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mt-2 relative"
         >
           <button
             type="button"
@@ -197,7 +197,7 @@
             </svg>
           </button>
           <h2 class="font-semibold text-lg">Which modes are you open to?</h2>
-          <div class="mt-2 grid grid-cols-2 gap-2">
+          <div class="mt-2 grid grid-cols-3 gap-2">
             <button
               type="button"
               class="modeBtn rounded-lg border border-slate-300 py-2"
@@ -326,7 +326,7 @@
         </section>
 
         <!-- Step 4: Results -->
-        <div class="mt-8 -mx-4">
+        <div class="mt-6 -mx-4">
           <div id="results" class="space-y-3"></div>
         </div>
       </div>
