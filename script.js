@@ -37,7 +37,6 @@ async function loadData() {
         shuttle: "Willing to pay",
       },
       defaults: {
-        day: "today",
         flexibilityEarlyMins: 15,
         flexibilityLateMins: 0,
         people: 1,
@@ -84,7 +83,7 @@ function getDefaultTime() {
 // Generate time options for dropdown (half-hour increments, starting at 5pm, ending at 10pm)
 function generateTimeOptions() {
   const timeSelect = document.getElementById("timeSelect");
-  const options = ['<option value="" disabled>Select a time</option>']; // Add empty default option (disabled to show lighter color)
+  const options = ['<option value="" disabled>---</option>']; // Add empty default option (disabled to show lighter color)
   // Start at 5pm (17:00) and go through 10pm (22:00)
   for (let hour = 17; hour <= 22; hour++) {
     for (let minute of [0, 30]) {
@@ -404,11 +403,23 @@ window.addEventListener("hashchange", () => {
   if (params.day !== undefined && params.day !== state.day) {
     state.day = params.day || "";
     daySelect.value = state.day;
+    // Update placeholder styling
+    if (state.day) {
+      daySelect.classList.remove("placeholder");
+    } else {
+      daySelect.classList.add("placeholder");
+    }
     dayChanged = true;
   }
   if (params.time !== undefined && params.time !== state.time) {
     state.time = params.time || "";
     timeSelect.value = state.time;
+    // Update placeholder styling
+    if (state.time) {
+      timeSelect.classList.remove("placeholder");
+    } else {
+      timeSelect.classList.add("placeholder");
+    }
     timeChanged = true;
   }
   if (params.people !== undefined && params.people !== state.people) {
@@ -586,6 +597,12 @@ function updateMinimizeButtonState() {
 daySelect.addEventListener("change", (e) => {
   state.day = e.target.value;
   dayChanged = true;
+  // Update placeholder styling
+  if (state.day) {
+    daySelect.classList.remove("placeholder");
+  } else {
+    daySelect.classList.add("placeholder");
+  }
   updateModesSectionState();
   updateMinimizeButtonState(); // Update minimize button state
   updateMinimizedView(); // Update minimized view if visible
@@ -1253,7 +1270,7 @@ async function init() {
   // Initialize state from loaded data
   state = {
     destination: appData.destination,
-    day: appData.defaults.day,
+    day: "", // Don't prefill day
     time: "", // Don't prefill time
     flexibilityEarlyMins: appData.defaults.flexibilityEarlyMins,
     flexibilityLateMins: appData.defaults.flexibilityLateMins,
@@ -1325,7 +1342,12 @@ async function init() {
 
   // Generate time options and initialize inputs
   generateTimeOptions();
-  daySelect.value = state.day;
+  daySelect.value = state.day || ""; // Clear day select if no day is set
+  if (state.day) {
+    daySelect.classList.remove("placeholder");
+  } else {
+    daySelect.classList.add("placeholder");
+  }
   if (state.time) {
     timeSelect.value = state.time;
     timeSelect.classList.remove("placeholder");
@@ -1382,7 +1404,7 @@ async function init() {
 function resetAll() {
   // Reset state to defaults
   state.destination = appData.destination;
-  state.day = appData.defaults.day;
+  state.day = ""; // Don't prefill day
   state.time = ""; // Don't prefill time
   state.flexibilityEarlyMins = appData.defaults.flexibilityEarlyMins;
   state.flexibilityLateMins = appData.defaults.flexibilityLateMins;
@@ -1411,11 +1433,18 @@ function resetAll() {
   }
 
   // Reset UI elements
-  daySelect.value = state.day;
+  daySelect.value = state.day || ""; // Clear day select if no day is set
+  if (state.day) {
+    daySelect.classList.remove("placeholder");
+  } else {
+    daySelect.classList.add("placeholder");
+  }
   if (state.time) {
     timeSelect.value = state.time;
+    timeSelect.classList.remove("placeholder");
   } else {
     timeSelect.value = "";
+    timeSelect.classList.add("placeholder");
   }
   document.getElementById("peopleCount").textContent = state.people;
   costSlider.value = state.costDollars;

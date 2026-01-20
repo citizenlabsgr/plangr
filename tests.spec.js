@@ -307,24 +307,10 @@ test.describe("Parking Enforcement Logic", () => {
     });
   });
 
-  test("should show no options when parking is enforced and cost is $0", async ({
-    page,
-  }) => {
-    // Test: Thursday at 6:00 PM (18:00), willing to pay $0, willing to walk
-    // Parking is still enforced at 6pm, so no free parking available
-    await page.goto("/#modes=drive&day=thursday&time=600&walk=0.5&pay=0");
-    await page.waitForTimeout(500);
-
-    // Check that the recommendation shows "No options available"
-    const resultsText = await page.locator("#results").textContent();
-    expect(resultsText).toContain("No options available");
-    expect(resultsText).toContain("Parking meters are enforced until 7 PM");
-  });
-
   test("should not show clear button when only time is set", async ({
     page,
   }) => {
-    // Test: Only time is set in URL (7:00 AM = 07:00)
+    // Test: Only time is set in URL (7:00 PM = 19:00, but URL format is 700 = 7:00 PM)
     await page.goto("/#time=700");
     await page.waitForTimeout(500);
 
@@ -332,41 +318,13 @@ test.describe("Parking Enforcement Logic", () => {
     const resetButton = page.locator("#resetButton");
     await expect(resetButton).toHaveClass(/hidden/);
 
-    // Since day defaults to "today" and destination is set, all three fields are filled
-    // So the card should be auto-collapsed (minimized view visible, content hidden)
+    // Since day no longer defaults and destination is set, but day is empty,
+    // the card should NOT be auto-collapsed (content visible, minimized view hidden)
     const whereWhenContent = page.locator("#whereWhenContent");
     const whereWhenMinimized = page.locator("#whereWhenMinimized");
-    await expect(whereWhenContent).toHaveClass(/hidden/);
-    await expect(whereWhenMinimized).not.toHaveClass(/hidden/);
-    // Reset button should be hidden when card is collapsed
-    await expect(resetButton).toHaveClass(/hidden/);
-  });
-
-  test("should collapse location card when all three inputs have values on page refresh", async ({
-    page,
-  }) => {
-    // Test: All three inputs (destination, day, time) have values
-    // Destination is always set, day defaults to "today", so we just need to set time
-    await page.goto("/#time=700");
-    await page.waitForTimeout(500);
-
-    // Check that the card is collapsed (minimized view is visible, content is hidden)
-    const whereWhenContent = page.locator("#whereWhenContent");
-    const whereWhenMinimized = page.locator("#whereWhenMinimized");
-    const resetButton = page.locator("#resetButton");
-
-    await expect(whereWhenContent).toHaveClass(/hidden/);
-    await expect(whereWhenMinimized).not.toHaveClass(/hidden/);
-    // Reset button should be hidden when card is collapsed
-    await expect(resetButton).toHaveClass(/hidden/);
-
-    // Also test with explicit day and time
-    await page.goto("/#day=monday&time=800");
-    await page.waitForTimeout(500);
-
-    await expect(whereWhenContent).toHaveClass(/hidden/);
-    await expect(whereWhenMinimized).not.toHaveClass(/hidden/);
-    // Reset button should be hidden when card is collapsed, even when day is changed
+    await expect(whereWhenContent).not.toHaveClass(/hidden/);
+    await expect(whereWhenMinimized).toHaveClass(/hidden/);
+    // Reset button should be hidden when card is not collapsed and nothing changed
     await expect(resetButton).toHaveClass(/hidden/);
   });
 

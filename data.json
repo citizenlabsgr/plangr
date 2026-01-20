@@ -27,7 +27,6 @@
     "shuttle": "Willing to pay"
   },
   "defaults": {
-    "day": "today",
     "flexibilityEarlyMins": 15,
     "flexibilityLateMins": 0,
     "people": 1,

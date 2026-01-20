@@ -8,18 +8,46 @@
   cursor: not-allowed;
 }
 
-/* Make the placeholder option in time select gray and smaller */
+/* Ensure time select has consistent sizing to prevent layout shift */
+#timeSelect {
+  font-size: 1rem; /* Consistent font size */
+}
+
+/* Make the placeholder option in time select gray */
 #timeSelect option[value=""]:disabled {
   color: rgb(148 163 184) !important; /* slate-400 */
-  font-size: 0.875rem; /* text-sm - smaller than default */
 }
 
 #timeSelect option:disabled {
   color: rgb(148 163 184) !important; /* slate-400 */
 }
 
-/* When the select has no value selected, make the displayed text gray and smaller */
+/* When the select has no value selected, make the displayed text gray */
 #timeSelect.placeholder {
   color: rgb(148 163 184); /* slate-400 */
-  font-size: 0.875rem; /* text-sm - smaller than default */
+}
+
+/* Ensure day select has consistent sizing to prevent layout shift */
+#daySelect {
+  font-size: 1rem; /* Consistent font size */
+}
+
+/* Make the placeholder option in day select gray */
+#daySelect option[value=""]:disabled {
+  color: rgb(148 163 184) !important; /* slate-400 */
+}
+
+#daySelect option:disabled {
+  color: rgb(148 163 184) !important; /* slate-400 */
+}
+
+/* When the day select has no value selected, make the displayed text gray */
+#daySelect.placeholder {
+  color: rgb(148 163 184); /* slate-400 */
+}
+
+/* Prevent layout shift when reset button appears/disappears */
+#resetButton.hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
