@@ -1,22 +1,20 @@
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "http://localhost:8080";
-
 test.describe("URL Fragment Permutations", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto("/");
     // Wait for the page to load and initialize
     await page.waitForSelector("#preferencesSection");
   });
 
   test("should parse single mode", async ({ page }) => {
-    await page.goto(`${BASE_URL}#modes=drive`);
+    await page.goto("/#modes=drive");
     await page.waitForTimeout(500); // Wait for fragment parsing
     expect(await page.evaluate(() => window.state.modes)).toEqual(["drive"]);
   });
 
   test("should parse multiple modes", async ({ page }) => {
-    await page.goto(`${BASE_URL}#modes=drive,transit`);
+    await page.goto("/#modes=drive,transit");
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.modes)).toEqual([
       "drive",
@@ -26,7 +24,7 @@ test.describe("URL Fragment Permutations", () => {
 
   test("should parse all valid modes", async ({ page }) => {
     await page.goto(
-      `${BASE_URL}#modes=drive,rideshare,transit,micromobility,shuttle,bike`,
+      "/#modes=drive,rideshare,transit,micromobility,shuttle,bike",
     );
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.modes)).toEqual([
@@ -40,7 +38,7 @@ test.describe("URL Fragment Permutations", () => {
   });
 
   test("should ignore invalid modes", async ({ page }) => {
-    await page.goto(`${BASE_URL}#modes=drive,invalid,transit`);
+    await page.goto("/#modes=drive,invalid,transit");
     await page.waitForTimeout(500);
     const modes = await page.evaluate(() => window.state.modes);
     expect(modes).toContain("drive");
@@ -49,41 +47,41 @@ test.describe("URL Fragment Permutations", () => {
   });
 
   test("should parse time in 3-digit format (HMM)", async ({ page }) => {
-    await page.goto(`${BASE_URL}#time=830`); // 8:30 PM
+    await page.goto("/#time=830"); // 8:30 PM
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.time)).toBe("20:30");
     expect(await page.locator("#timeSelect")).toHaveValue("20:30");
   });
 
   test("should parse time in 4-digit format (HHMM)", async ({ page }) => {
-    await page.goto(`${BASE_URL}#time=1000`); // 10:00 PM
+    await page.goto("/#time=1000"); // 10:00 PM
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.time)).toBe("22:00");
     expect(await page.locator("#timeSelect")).toHaveValue("22:00");
   });
 
   test("should parse time 8:30 PM (830)", async ({ page }) => {
-    await page.goto(`${BASE_URL}#time=830`);
+    await page.goto("/#time=830");
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.time)).toBe("20:30");
   });
 
   test("should parse day parameter", async ({ page }) => {
-    await page.goto(`${BASE_URL}#day=tomorrow`);
+    await page.goto("/#day=tomorrow");
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.day)).toBe("tomorrow");
     expect(await page.locator("#daySelect")).toHaveValue("tomorrow");
   });
 
   test("should parse people parameter", async ({ page }) => {
-    await page.goto(`${BASE_URL}#people=3`);
+    await page.goto("/#people=3");
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.people)).toBe(3);
     expect(await page.locator("#peopleCount")).toHaveText("3");
   });
 
   test("should parse people within valid range (1-6)", async ({ page }) => {
-    await page.goto(`${BASE_URL}#people=4`);
+    await page.goto("/#people=4");
     await page.waitForTimeout(500);
     const people = await page.evaluate(() => window.state.people);
     expect(people).toBeGreaterThanOrEqual(1);
@@ -91,15 +89,13 @@ test.describe("URL Fragment Permutations", () => {
   });
 
   test("should ignore people outside valid range", async ({ page }) => {
-    await page.goto(`${BASE_URL}#people=10`);
+    await page.goto("/#people=10");
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.people)).toBe(6); // Clamped to max
   });
 
   test("should parse combined parameters", async ({ page }) => {
-    await page.goto(
-      `${BASE_URL}#modes=bike,shuttle&day=friday&time=1730&people=2`,
-    );
+    await page.goto("/#modes=bike,shuttle&day=friday&time=1730&people=2");
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.modes)).toEqual([
       "bike",
@@ -111,20 +107,20 @@ test.describe("URL Fragment Permutations", () => {
   });
 
   test("should handle empty modes parameter", async ({ page }) => {
-    await page.goto(`${BASE_URL}#modes=`);
+    await page.goto("/#modes=");
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.modes)).toEqual([]);
   });
 
   test("should handle URL-encoded parameters", async ({ page }) => {
-    await page.goto(`${BASE_URL}#day=next%20week&time=1900`);
+    await page.goto("/#day=next%20week&time=1900");
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.day)).toBe("next week");
     expect(await page.evaluate(() => window.state.time)).toBe("19:00");
   });
 
   test("should update fragment when mode is selected", async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto("/");
     await page.waitForTimeout(500);
 
     // Set required fields first (destination is already set, need day and time)
@@ -141,7 +137,7 @@ test.describe("URL Fragment Permutations", () => {
   });
 
   test("should update fragment when time is selected", async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto("/");
     await page.waitForTimeout(500);
 
     const timeSelect = page.locator("#timeSelect");
@@ -153,7 +149,7 @@ test.describe("URL Fragment Permutations", () => {
   });
 
   test("should update fragment with multiple modes", async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto("/");
     await page.waitForTimeout(500);
 
     // Set required fields first (destination is already set, need day and time)
@@ -171,17 +167,17 @@ test.describe("URL Fragment Permutations", () => {
 
   test("should handle time conversion edge cases", async ({ page }) => {
     // Test 5:00 PM (500)
-    await page.goto(`${BASE_URL}#time=500`);
+    await page.goto("/#time=500");
     await page.waitForTimeout(500);
     await expect(page.locator("#timeSelect")).toHaveValue("17:00");
 
     // Test 9:30 PM (930)
-    await page.goto(`${BASE_URL}#time=930`);
+    await page.goto("/#time=930");
     await page.waitForTimeout(500);
     await expect(page.locator("#timeSelect")).toHaveValue("21:30");
 
     // Test 10:00 PM (1000)
-    await page.goto(`${BASE_URL}#time=1000`);
+    await page.goto("/#time=1000");
     await page.waitForTimeout(500);
     await expect(page.locator("#timeSelect")).toHaveValue("22:00");
   });
@@ -189,7 +185,7 @@ test.describe("URL Fragment Permutations", () => {
 
 test.describe("Parking Enforcement Logic", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto("/");
     await page.waitForSelector("#preferencesSection");
   });
 
@@ -197,7 +193,7 @@ test.describe("Parking Enforcement Logic", () => {
     page,
   }) => {
     // Test Monday at 12:00 PM (noon) - should be enforced
-    await page.goto(`${BASE_URL}#day=monday&time=1200`);
+    await page.goto("/#day=monday&time=1200");
     await page.waitForTimeout(500);
     const isEnforced = await page.evaluate(() => {
       return window.isParkingEnforced("monday", "12:00");
@@ -207,7 +203,7 @@ test.describe("Parking Enforcement Logic", () => {
 
   test("should NOT enforce parking on weekday after 7pm", async ({ page }) => {
     // Test Tuesday at 7:30 PM - should NOT be enforced
-    await page.goto(`${BASE_URL}#day=tuesday&time=1930`);
+    await page.goto("/#day=tuesday&time=1930");
     await page.waitForTimeout(500);
     const isEnforced = await page.evaluate(() => {
       return window.isParkingEnforced("tuesday", "19:30");
@@ -217,7 +213,7 @@ test.describe("Parking Enforcement Logic", () => {
 
   test("should NOT enforce parking on weekday before 8am", async ({ page }) => {
     // Test Wednesday at 7:30 AM - should NOT be enforced
-    await page.goto(`${BASE_URL}#day=wednesday&time=0730`);
+    await page.goto("/#day=wednesday&time=0730");
     await page.waitForTimeout(500);
     const isEnforced = await page.evaluate(() => {
       return window.isParkingEnforced("wednesday", "07:30");
@@ -227,7 +223,7 @@ test.describe("Parking Enforcement Logic", () => {
 
   test("should NOT enforce parking on weekends", async ({ page }) => {
     // Test Saturday at 2:00 PM - should NOT be enforced
-    await page.goto(`${BASE_URL}#day=saturday&time=1400`);
+    await page.goto("/#day=saturday&time=1400");
     await page.waitForTimeout(500);
     const isEnforced = await page.evaluate(() => {
       return window.isParkingEnforced("saturday", "14:00");
@@ -239,9 +235,7 @@ test.describe("Parking Enforcement Logic", () => {
     page,
   }) => {
     // Set up: drive mode, willing to pay $10, willing to walk 0.5 miles, arriving Tuesday at 7:30 PM
-    await page.goto(
-      `${BASE_URL}#modes=drive&day=tuesday&time=1930&walk=0.5&pay=10`,
-    );
+    await page.goto("/#modes=drive&day=tuesday&time=1930&walk=0.5&pay=10");
     await page.waitForTimeout(500);
 
     // Check that the recommendation is for free street parking
@@ -253,9 +247,7 @@ test.describe("Parking Enforcement Logic", () => {
     page,
   }) => {
     // Set up: drive mode, willing to pay $5 (low budget), willing to walk 0.5 miles, arriving Saturday at 2:00 PM
-    await page.goto(
-      `${BASE_URL}#modes=drive&day=saturday&time=1400&walk=0.5&pay=5`,
-    );
+    await page.goto("/#modes=drive&day=saturday&time=1400&walk=0.5&pay=5");
     await page.waitForTimeout(500);
 
     // Check that the recommendation is for free street parking (since budget is low)
@@ -267,9 +259,7 @@ test.describe("Parking Enforcement Logic", () => {
     page,
   }) => {
     // Set up: drive mode, willing to pay $10, willing to walk 0.5 miles, arriving Monday at 6:00 PM
-    await page.goto(
-      `${BASE_URL}#modes=drive&day=monday&time=1800&walk=0.5&pay=10`,
-    );
+    await page.goto("/#modes=drive&day=monday&time=1800&walk=0.5&pay=10");
     await page.waitForTimeout(500);
 
     // Check that the recommendation is for affordable surface lot (since user is willing to pay $8-$19)
@@ -281,9 +271,7 @@ test.describe("Parking Enforcement Logic", () => {
     page,
   }) => {
     // Set up: drive mode, willing to pay $10, willing to walk 0.5 miles, arriving Monday at 6:00 PM (still enforced)
-    await page.goto(
-      `${BASE_URL}#modes=drive&day=monday&time=1800&walk=0.5&pay=10`,
-    );
+    await page.goto("/#modes=drive&day=monday&time=1800&walk=0.5&pay=10");
     await page.waitForTimeout(500);
 
     // Check that the recommendation is for affordable surface lot (since willing to pay $10 >= $8)
@@ -292,7 +280,7 @@ test.describe("Parking Enforcement Logic", () => {
   });
 
   test("should use isParkingEnforced function correctly", async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto("/");
     await page.waitForTimeout(500);
 
     // Test the function directly using the exposed function
@@ -324,9 +312,7 @@ test.describe("Parking Enforcement Logic", () => {
   }) => {
     // Test: Thursday at 6:00 PM (18:00), willing to pay $0, willing to walk
     // Parking is still enforced at 6pm, so no free parking available
-    await page.goto(
-      `${BASE_URL}#modes=drive&day=thursday&time=600&walk=0.5&pay=0`,
-    );
+    await page.goto("/#modes=drive&day=thursday&time=600&walk=0.5&pay=0");
     await page.waitForTimeout(500);
 
     // Check that the recommendation shows "No options available"
@@ -339,7 +325,7 @@ test.describe("Parking Enforcement Logic", () => {
     page,
   }) => {
     // Test: Only time is set in URL (7:00 AM = 07:00)
-    await page.goto(`${BASE_URL}#time=700`);
+    await page.goto("/#time=700");
     await page.waitForTimeout(500);
 
     // Check that reset button is hidden (since day hasn't been changed)
@@ -361,7 +347,7 @@ test.describe("Parking Enforcement Logic", () => {
   }) => {
     // Test: All three inputs (destination, day, time) have values
     // Destination is always set, day defaults to "today", so we just need to set time
-    await page.goto(`${BASE_URL}#time=700`);
+    await page.goto("/#time=700");
     await page.waitForTimeout(500);
 
     // Check that the card is collapsed (minimized view is visible, content is hidden)
@@ -375,7 +361,7 @@ test.describe("Parking Enforcement Logic", () => {
     await expect(resetButton).toHaveClass(/hidden/);
 
     // Also test with explicit day and time
-    await page.goto(`${BASE_URL}#day=monday&time=800`);
+    await page.goto("/#day=monday&time=800");
     await page.waitForTimeout(500);
 
     await expect(whereWhenContent).toHaveClass(/hidden/);
@@ -387,7 +373,7 @@ test.describe("Parking Enforcement Logic", () => {
   test("should collapse card when save button is clicked", async ({ page }) => {
     // Test: Save button should collapse the card when all fields are filled
     // Start with a clean page (no fragment) so card is expanded
-    await page.goto(BASE_URL);
+    await page.goto("/");
     await page.waitForSelector("#whereWhenContent", { state: "attached" });
     await page.waitForTimeout(300);
 
