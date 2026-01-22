@@ -1,14 +1,14 @@
 .PHONY: install
 install:
 	npm install --no-save @playwright/test
-	npx playwright install
+	npx playwright install chromium
 
 .PHONY: all
 all: format test
 
 .PHONY: format
 format:
-	npx --yes prettier --write .
+	npx --yes prettier --write . --log-level=silent
 
 .PHONY: test
 test: install
