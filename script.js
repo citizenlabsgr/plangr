@@ -164,8 +164,9 @@ function parseFragment() {
 
   const params = {};
   hash.split("&").forEach((param) => {
-    const [key, value] = param.split("=");
-    if (key && value) {
+    const [key, ...valueParts] = param.split("=");
+    const value = valueParts.length > 0 ? valueParts.join("=") : undefined;
+    if (key && value !== undefined) {
       if (key === "time") {
         // Convert time from URL format (HHMM) to state format (HH:MM)
         params[key] = timeFromUrl(decodeURIComponent(value));
@@ -567,8 +568,9 @@ function updateMinimizeButtonState() {
   // Only update if the card is not collapsed (minimized view is hidden)
   if (whereWhenMinimized && whereWhenMinimized.classList.contains("hidden")) {
     // Reset button can be shown independently in top right if there's anything to clear
+    // Only show when day is changed (time changes don't require a reset button)
     if (resetBtn) {
-      if (dayChanged || timeChanged) {
+      if (dayChanged) {
         resetBtn.classList.remove("hidden");
       } else {
         resetBtn.classList.add("hidden");
@@ -711,10 +713,10 @@ function expandWhereWhen() {
   whereWhenMinimized.classList.add("hidden");
   // Update reset button visibility when expanded
   updateMinimizeButtonState();
-  // Show reset button in top right when expanded, if there's anything to clear (day or time changed)
+  // Show reset button in top right when expanded, if there's anything to clear (day changed)
   const resetBtn = document.getElementById("resetButton");
   if (resetBtn) {
-    if (dayChanged || timeChanged) {
+    if (dayChanged) {
       resetBtn.classList.remove("hidden");
     } else {
       resetBtn.classList.add("hidden");
@@ -800,13 +802,11 @@ function renderResults() {
     card.innerHTML = `
       <div class="space-y-2">
         <div>
-          <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">No Options Available</div>
+          <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Unknown Strategy</div>
           <h3 class="font-semibold text-base">${recommendation.title}</h3>
-          ${
-            recommendation.body
-              ? `<p class="text-xs text-slate-600 mt-1">${recommendation.body}</p>`
-              : ""
-          }
+          <p class="text-sm text-slate-600 mt-1">${
+            recommendation.body || recommendation.title
+          }</p>
         </div>
       </div>
     `;
@@ -826,11 +826,9 @@ function renderResults() {
           <button type="button" id="${toggleId}" class="absolute top-3 right-3 text-xs px-2 py-1 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-400 font-medium transition-colors" aria-label="Toggle steps">
             Show steps <span class="inline-block ml-1">▼</span>
           </button>
-          ${
-            recommendation.body
-              ? `<p class="text-xs text-slate-600 mt-1">${recommendation.body}</p>`
-              : ""
-          }
+          <p class="text-sm text-slate-600 mt-1">${
+            recommendation.body || recommendation.title
+          }</p>
         </div>
         <div id="${stepsId}" class="hidden space-y-2 mt-2">
           <ol class="space-y-2">
@@ -847,14 +845,14 @@ function renderResults() {
                   }</div>
                   ${
                     step.description
-                      ? `<div class="text-xs text-slate-600 mt-1 leading-relaxed">${step.description}</div>`
+                      ? `<div class="text-sm text-slate-600 mt-1 leading-relaxed">${step.description}</div>`
                       : ""
                   }
                   ${
                     step.link
                       ? `<a href="${
                           step.link
-                        }" target="_blank" rel="noopener noreferrer" class="mt-1 inline-block text-xs text-blue-600 hover:text-blue-800 underline">${
+                        }" target="_blank" rel="noopener noreferrer" class="mt-1 inline-block text-sm text-blue-600 hover:text-blue-800 underline">${
                           step.linkText || "Open link"
                         } →</a>`
                       : ""
@@ -902,17 +900,15 @@ function renderResults() {
               <div class="font-semibold text-sm text-slate-900">${
                 recommendation.instruction || recommendation.title
               }</div>
-              ${
-                recommendation.body
-                  ? `<div class="text-xs text-slate-600 mt-1 leading-relaxed">${recommendation.body}</div>`
-                  : ""
-              }
+              <div class="text-sm text-slate-600 mt-1 leading-relaxed">${
+                recommendation.body || recommendation.title
+              }</div>
             </div>
           </div>
         </div>
         ${
           recommendation.meta
-            ? `<div class="pt-2 border-t border-slate-200 text-xs text-slate-500">${recommendation.meta}</div>`
+            ? `<div class="pt-2 border-t border-slate-200 text-sm text-slate-500">${recommendation.meta}</div>`
             : ""
         }
       </div>
@@ -941,11 +937,9 @@ function renderResults() {
             <button type="button" id="${altToggleId}" class="absolute top-3 right-3 text-xs px-2 py-1 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-400 font-medium transition-colors" aria-label="Toggle steps">
               Show steps <span class="inline-block ml-1">▼</span>
             </button>
-            ${
-              alternate.body
-                ? `<p class="text-xs text-slate-600 mt-1">${alternate.body}</p>`
-                : ""
-            }
+            <p class="text-sm text-slate-600 mt-1">${
+              alternate.body || alternate.title
+            }</p>
           </div>
           <div id="${altStepsId}" class="hidden space-y-2 mt-2">
             <ol class="space-y-2">
@@ -962,14 +956,14 @@ function renderResults() {
                     }</div>
                     ${
                       step.description
-                        ? `<div class="text-xs text-slate-600 mt-1 leading-relaxed">${step.description}</div>`
+                        ? `<div class="text-sm text-slate-600 mt-1 leading-relaxed">${step.description}</div>`
                         : ""
                     }
                     ${
                       step.link
                         ? `<a href="${
                             step.link
-                          }" target="_blank" rel="noopener noreferrer" class="mt-1 inline-block text-xs text-blue-600 hover:text-blue-800 underline">${
+                          }" target="_blank" rel="noopener noreferrer" class="mt-1 inline-block text-sm text-blue-600 hover:text-blue-800 underline">${
                             step.linkText || "Open link"
                           } →</a>`
                         : ""
@@ -1003,7 +997,7 @@ function renderResults() {
       altCard.innerHTML = `
         <div class="space-y-2">
           <div>
-            <div class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Alternate Strategy</div>
+            <div class="text-sm font-medium text-slate-500 uppercase tracking-wide mb-1">Alternate Strategy</div>
             <h3 class="font-semibold text-base">${alternate.title}</h3>
           </div>
           <div class="space-y-2">
@@ -1013,11 +1007,9 @@ function renderResults() {
                 <div class="font-semibold text-sm text-slate-900">${
                   alternate.instruction || alternate.title
                 }</div>
-                ${
-                  alternate.body
-                    ? `<div class="text-xs text-slate-600 mt-1 leading-relaxed">${alternate.body}</div>`
-                    : ""
-                }
+                <div class="text-sm text-slate-600 mt-1 leading-relaxed">${
+                  alternate.body || alternate.title
+                }</div>
               </div>
             </div>
           </div>
@@ -1195,8 +1187,8 @@ function buildRecommendation() {
       let recKey;
       if (walkMiles === 0) {
         recKey = "noWalk";
-      } else if (parkingEnforced && effectiveCostDollars === 0) {
-        // If parking is enforced and effective cost is $0 (user won't pay), no options available
+      } else if (parkingEnforced && safeCostDollars === 0) {
+        // If parking is enforced and user won't pay (cost is $0), no options available
         recKey = "noCost";
       } else if (walkMiles > 0 && effectiveCostDollars >= 20) {
         // If user is willing to pay $20+, recommend premium ramps (structured parking garages, $27-$30)
@@ -1350,12 +1342,11 @@ async function init() {
       updatePreferencesVisibility(); // Update UI
     }
   }
-  if (params.pay) {
+  if (params.pay !== undefined) {
     const payValue = Number(params.pay);
     if (!isNaN(payValue) && payValue >= 0) {
       state.costDollars = payValue;
       costChanged = true; // Mark as changed since it came from fragment
-      costSlider.value = payValue;
       updatePreferencesVisibility(); // Update UI
     }
   }
@@ -1395,6 +1386,7 @@ async function init() {
     walkTimeValue.textContent = walkMinutes;
   }
 
+  // Set slider value AFTER all state initialization to avoid triggering input events
   costSlider.value = state.costDollars;
   earlySlider.value = state.flexibilityEarlyMins;
   lateSlider.value = state.flexibilityLateMins;
@@ -1406,6 +1398,11 @@ async function init() {
   // Update Google Maps directions link
   updateDirectionsLink();
 
+  // Expose state on window for testing (before rendering so tests can verify state)
+  window.state = state;
+  window.appData = appData;
+  window.isParkingEnforced = isParkingEnforced;
+
   // Initialize UI
   updateModesSectionState();
   updateMinimizeButtonState(); // Set initial minimize button state
@@ -1413,11 +1410,6 @@ async function init() {
   updatePreferencesVisibility();
   updateResetModesButtonVisibility();
   renderResults();
-
-  // Expose state on window for testing
-  window.state = state;
-  window.appData = appData;
-  window.isParkingEnforced = isParkingEnforced;
 }
 
 // Reset function to clear all URL fragments and reset state

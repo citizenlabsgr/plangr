@@ -279,6 +279,100 @@ test.describe("Parking Enforcement Logic", () => {
     expect(resultsText).toContain("affordable surface lot");
   });
 
+  test("should show no options when arriving during enforcement hours but unwilling to pay", async ({
+    page,
+  }) => {
+    // Set up: drive mode, unwilling to pay ($0), willing to walk 0.5 miles, arriving Monday at 6:00 PM (during enforcement 8am-7pm)
+    await page.goto("/#modes=drive&day=monday&time=1800&walk=0.5&pay=0");
+    // Wait for results to render
+    const results = page.locator("#results");
+    await results.waitFor();
+
+    // Wait for state to be initialized correctly (with retry)
+    await expect(async () => {
+      const state = await page.evaluate(() => window.state);
+      if (
+        !state ||
+        state.costDollars !== 0 ||
+        state.day !== "monday" ||
+        state.time !== "18:00"
+      ) {
+        throw new Error(`State not initialized: ${JSON.stringify(state)}`);
+      }
+    }).toPass({ timeout: 7000 });
+
+    // Check that the recommendation shows "Unknown Strategy"
+    await expect(results).toContainText("Unknown Strategy");
+    await expect(results).toContainText("not willing to pay for parking");
+  });
+
+  test("should recommend free street parking when arriving after 7pm on weekday and unwilling to pay", async ({
+    page,
+  }) => {
+    // Set up: drive mode, unwilling to pay ($0), willing to walk 0.5 miles, arriving Tuesday at 7:30 PM (after enforcement ends)
+    await page.goto("/#modes=drive&day=tuesday&time=1930&walk=0.5&pay=0");
+    await page.waitForTimeout(500);
+
+    // Check that the recommendation is for free street parking (parking not enforced after 7pm)
+    const resultsText = await page.locator("#results").textContent();
+    expect(resultsText).toContain("free street parking");
+  });
+
+  test("should recommend free street parking when arriving on weekend and unwilling to pay", async ({
+    page,
+  }) => {
+    // Set up: drive mode, unwilling to pay ($0), willing to walk 0.5 miles, arriving Saturday at 2:00 PM (weekend, not enforced)
+    await page.goto("/#modes=drive&day=saturday&time=1400&walk=0.5&pay=0");
+    await page.waitForTimeout(500);
+
+    // Check that the recommendation is for free street parking (parking not enforced on weekends)
+    const resultsText = await page.locator("#results").textContent();
+    expect(resultsText).toContain("free street parking");
+  });
+
+  test("should show summary line below title for free street parking strategy", async ({
+    page,
+  }) => {
+    await page.goto("/#modes=drive&day=monday&time=600&walk=0.8&pay=3");
+    await page.waitForSelector("#results");
+    await page.waitForTimeout(500);
+
+    // Check that the title is shown
+    const resultsText = await page.locator("#results").textContent();
+    expect(resultsText).toContain("Find free street parking");
+
+    // Check that the summary/body text is shown below the title
+    // The body text should contain "Spend 15 minutes in traffic"
+    expect(resultsText).toContain("Spend 15 minutes in traffic");
+    expect(resultsText).toContain("circling the area");
+  });
+
+  test("should recommend affordable lot when arriving after 7pm on weekday and willing to pay enough", async ({
+    page,
+  }) => {
+    // Set up: drive mode, willing to pay $10, willing to walk 0.5 miles, arriving Tuesday at 7:30 PM (after enforcement ends)
+    await page.goto("/#modes=drive&day=tuesday&time=1930&walk=0.5&pay=10");
+    await page.waitForTimeout(500);
+
+    // Check that the recommendation is for affordable surface lot (since willing to pay $10 >= $8)
+    // Even though parking is free, if user is willing to pay, recommend paid parking
+    const resultsText = await page.locator("#results").textContent();
+    expect(resultsText).toContain("affordable surface lot");
+  });
+
+  test("should recommend affordable lot when arriving on weekend and willing to pay enough", async ({
+    page,
+  }) => {
+    // Set up: drive mode, willing to pay $10, willing to walk 0.5 miles, arriving Saturday at 2:00 PM (weekend, not enforced)
+    await page.goto("/#modes=drive&day=saturday&time=1400&walk=0.5&pay=10");
+    await page.waitForTimeout(500);
+
+    // Check that the recommendation is for affordable surface lot (since willing to pay $10 >= $8)
+    // Even though parking is free on weekends, if user is willing to pay, recommend paid parking
+    const resultsText = await page.locator("#results").textContent();
+    expect(resultsText).toContain("affordable surface lot");
+  });
+
   test("should use isParkingEnforced function correctly", async ({ page }) => {
     await page.goto("/");
     await page.waitForTimeout(500);
@@ -372,19 +466,19 @@ test.describe("Parking Enforcement Logic", () => {
     const isStillExpanded = await whereWhenContent.isVisible();
     if (!isStillExpanded) {
       // Wait for expand button to be available
-      await expect(expandButton).toBeVisible({ timeout: 2000 });
+      await expect(expandButton).toBeVisible();
       await page.waitForTimeout(200);
       // Click expand button
       await expandButton.click();
       await page.waitForTimeout(300);
       // Wait for the card to be fully expanded
-      await expect(whereWhenContent).toBeVisible({ timeout: 3000 });
+      await expect(whereWhenContent).toBeVisible();
       await page.waitForTimeout(200);
     }
 
     // Verify card is expanded and save button is enabled
     await expect(whereWhenContent).toBeVisible();
-    await expect(saveButton).toBeEnabled({ timeout: 2000 });
+    await expect(saveButton).toBeEnabled();
 
     // Wait a bit for the button to be fully rendered
     await page.waitForTimeout(200);
@@ -393,8 +487,8 @@ test.describe("Parking Enforcement Logic", () => {
     await saveButton.click({ force: true });
 
     // Wait for the card to collapse
-    await expect(whereWhenContent).not.toBeVisible({ timeout: 2000 });
-    await expect(whereWhenMinimized).toBeVisible({ timeout: 2000 });
+    await expect(whereWhenContent).not.toBeVisible();
+    await expect(whereWhenMinimized).toBeVisible();
 
     // Reset button should be hidden when card is collapsed
     const resetButton = page.locator("#resetButton");

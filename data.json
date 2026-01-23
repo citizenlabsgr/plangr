@@ -116,7 +116,7 @@
       },
       "noCost": {
         "title": "No options available",
-        "body": "Parking meters are enforced until 7 PM on weekdays. Since you're not willing to pay for parking, there are no options available. Consider arriving after 7 PM when meters are free, or adjust your budget.",
+        "body": "Parking meters are enforced Monday-Friday 8am-7pm. Since you're not willing to pay for parking, there are no options available during enforcement hours. Consider arriving before 8am, after 7pm on weekdays, or on weekends when meters are free, or adjust your budget.",
         "isNoOptions": true
       },
       "affordableLot": {
@@ -137,11 +137,11 @@
         ],
         "alternate": {
           "title": "Find free street parking",
-          "body": "Spend 15 minutes in traffic circling the area near {destination} to find free street parking. Meters are free after 7 PM on weekdays and all day on weekends.",
+          "body": "Spend 15 minutes in traffic circling the area near {destination} to find free street parking. Meters are not enforced on weekends (free all day), and free on weekdays before 8am and after 7pm.",
           "steps": [
             {
               "title": "Spend 15 minutes in traffic looking for free street parking",
-              "description": "Circle the blocks near {destination} looking for free street parking. Meters are typically free after 7 PM on weekdays and all day on weekends. Be aware of odd-even parking restrictions from November 1 to April 1. This may take 15+ minutes of driving in traffic.",
+              "description": "Circle the blocks near {destination} looking for free street parking. Meters are not enforced on weekends (free all day), and free on weekdays before 8am and after 7pm. Enforcement hours are Monday-Friday 8am-7pm. Be aware of odd-even parking restrictions from November 1 to April 1. This may take 15+ minutes of driving in traffic.",
               "link": "https://www.google.com/maps/search/?api=1&query=street+parking+near+Van+Andel+Arena,+Grand+Rapids,+MI",
               "linkText": "View area on Google Maps"
             },
@@ -160,7 +160,7 @@
         "steps": [
           {
             "title": "Spend 15 minutes in traffic looking for free street parking",
-            "description": "Circle the blocks near {destination} looking for free street parking. Meters are typically free after 7 PM on weekdays and all day on weekends. Be aware of odd-even parking restrictions from November 1 to April 1. This may take 15+ minutes of driving in traffic.",
+            "description": "Circle the blocks near {destination} looking for free street parking. Meters are not enforced on weekends (free all day), and free on weekdays before 8am and after 7pm. Enforcement hours are Monday-Friday 8am-7pm. Be aware of odd-even parking restrictions from November 1 to April 1. This may take 15+ minutes of driving in traffic.",
             "link": "https://www.google.com/maps/search/?api=1&query=street+parking+near+Van+Andel+Arena,+Grand+Rapids,+MI",
             "linkText": "View area on Google Maps"
           },
@@ -188,11 +188,11 @@
         ],
         "alternate": {
           "title": "Find free street parking",
-          "body": "Spend 15 minutes in traffic circling the area near {destination} to find free street parking. Meters are free after 7 PM on weekdays and all day on weekends.",
+          "body": "Spend 15 minutes in traffic circling the area near {destination} to find free street parking. Meters are not enforced on weekends (free all day), and free on weekdays before 8am and after 7pm.",
           "steps": [
             {
               "title": "Spend 15 minutes in traffic looking for free street parking",
-              "description": "Circle the blocks near {destination} looking for free street parking. Meters are typically free after 7 PM on weekdays and all day on weekends. Be aware of odd-even parking restrictions from November 1 to April 1. This may take 15+ minutes of driving in traffic.",
+              "description": "Circle the blocks near {destination} looking for free street parking. Meters are not enforced on weekends (free all day), and free on weekdays before 8am and after 7pm. Enforcement hours are Monday-Friday 8am-7pm. Be aware of odd-even parking restrictions from November 1 to April 1. This may take 15+ minutes of driving in traffic.",
               "link": "https://www.google.com/maps/search/?api=1&query=street+parking+near+Van+Andel+Arena,+Grand+Rapids,+MI",
               "linkText": "View area on Google Maps"
             },
