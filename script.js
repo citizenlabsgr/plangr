@@ -157,7 +157,7 @@ function timeFromUrl(urlTime) {
   return urlTime; // Fallback if already in HH:MM format
 }
 
-// Parse URL fragment (format: #modes=drive,transit&day=today&time=1800&people=2)
+// Parse URL fragment (format: #modes=drive,transit&day=monday&time=1800&people=2)
 function parseFragment() {
   const hash = window.location.hash.slice(1); // Remove the #
   if (!hash) return {};
@@ -655,8 +655,6 @@ function updateMinimizedView() {
   if (minimizedDay && state) {
     // Format day display
     const dayLabels = {
-      today: "Today",
-      tomorrow: "Tomorrow",
       monday: "Monday",
       tuesday: "Tuesday",
       wednesday: "Wednesday",
@@ -665,7 +663,7 @@ function updateMinimizedView() {
       saturday: "Saturday",
       sunday: "Sunday",
     };
-    minimizedDay.textContent = dayLabels[state.day] || state.day || "Today";
+    minimizedDay.textContent = dayLabels[state.day] || state.day || "";
   }
 
   const minimizedTimeSeparator = document.getElementById(
@@ -1039,13 +1037,63 @@ function isParkingEnforced(day, time) {
     return true;
   }
 
-  // For "today" or "tomorrow", we need to check the actual day
-  // For now, default to checking time only (assume weekday)
-  // If time is before 8am or at/after 7pm, no enforcement
-  if (hour24 < 8 || hour24 >= 19) {
-    return false;
-  }
+  // If day is not recognized, default to enforced
   return true;
+}
+
+// Calculate the minimum cost required for metered parking based on arrival time and enforcement
+// Returns the minimum cost needed, or 0 if parking is not enforced
+function calculateRequiredMeteredParkingCost(day, time) {
+  if (!day || !time) return 0;
+
+  const parkingEnforced = isParkingEnforced(day, time);
+  if (!parkingEnforced) {
+    return 0; // No cost if parking is not enforced
+  }
+
+  // Parse time (HH:MM format)
+  const [hours, minutes] = time.split(":").map(Number);
+  const hour24 = hours;
+  const minute24 = minutes;
+
+  // Check if it's a weekday
+  const weekdayDays = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+  if (weekdayDays.includes(day.toLowerCase())) {
+    // Enforcement ends at 7pm (19:00)
+    const enforcementEndHour = 19;
+    const enforcementEndMinute = 0;
+
+    // Calculate hours and minutes until enforcement ends
+    let hoursUntilEnd = enforcementEndHour - hour24;
+    let minutesUntilEnd = enforcementEndMinute - minute24;
+
+    // Handle minute overflow
+    if (minutesUntilEnd < 0) {
+      minutesUntilEnd += 60;
+      hoursUntilEnd -= 1;
+    }
+
+    // Calculate total minutes until enforcement ends
+    const totalMinutesUntilEnd = hoursUntilEnd * 60 + minutesUntilEnd;
+
+    // If already past enforcement end, no cost
+    if (totalMinutesUntilEnd <= 0) {
+      return 0;
+    }
+
+    // Metered parking costs $1.25-$2.00 per half hour in prime areas
+    // Use the higher rate ($2.00 per half hour = $4.00 per hour) to ensure budget is sufficient
+    const hourlyRate = 4.0; // $4.00 per hour (worst case)
+    const halfHourRate = 2.0; // $2.00 per half hour
+
+    // Calculate cost: round up to nearest half hour
+    const halfHoursNeeded = Math.ceil(totalMinutesUntilEnd / 30);
+    const requiredCost = halfHoursNeeded * halfHourRate;
+
+    return requiredCost;
+  }
+
+  return 0;
 }
 
 // Helper function to replace placeholders in text
@@ -1175,21 +1223,59 @@ function buildRecommendation() {
           ? 0
           : safeCostDollars;
 
+      // Calculate required metered parking cost if parking is enforced
+      // There's no free street parking within 0.5 miles of Van Andel Arena during enforcement hours
+      const requiredMeteredCost = calculateRequiredMeteredParkingCost(
+        state.day,
+        state.time,
+      );
+      const hasFreeParkingAvailable = !parkingEnforced || walkMiles > 0.5;
+
       let recKey;
       if (walkMiles === 0) {
         recKey = "noWalk";
       } else if (parkingEnforced && safeCostDollars === 0) {
         // If parking is enforced and user won't pay (cost is $0), no options available
         recKey = "noCost";
+      } else if (
+        parkingEnforced &&
+        !hasFreeParkingAvailable &&
+        requiredMeteredCost > 0 &&
+        safeCostDollars < requiredMeteredCost
+      ) {
+        // If parking is enforced, no free parking available, and user's budget is less than required metered cost
+        recKey = "noCost";
       } else if (walkMiles > 0 && effectiveCostDollars >= 20) {
         // If user is willing to pay $20+, recommend premium ramps (structured parking garages, $27-$30)
-        // Ramps have better availability than surface lots
+        // Premium ramps like Arena Place Garage are directly across from the arena
         recKey = "premiumRamp";
-      } else if (walkMiles > 0 && effectiveCostDollars >= 8) {
-        // If user is willing to pay $8-$19, recommend affordable surface lots ($8-$10 for 4 hours)
-        // Surface lots are cheaper than ramps (structured garages)
+      } else if (walkMiles > 0 && effectiveCostDollars >= 12) {
+        // If user is willing to pay $12-$19, recommend city parking garages ($1.50/hour, max $12)
+        // City garages like Monroe Center Ramp and Ottawa-Fulton Ramp are affordable structured parking
+        recKey = "cheaperGarage";
+      } else if (
+        walkMiles >= 0.5 &&
+        effectiveCostDollars >= 8 &&
+        effectiveCostDollars < 12
+      ) {
+        // If user is willing to pay $8-$11 and can walk at least 0.5 miles, recommend affordable surface lots ($8-$10 for 4 hours)
+        // Surface lots are cheaper than garages but fill up quickly and are 0.2-0.5 miles from Van Andel Arena
         recKey = "affordableLot";
-      } else if (effectiveCostDollars < 8) {
+      } else if (
+        walkMiles > 0 &&
+        walkMiles < 0.5 &&
+        effectiveCostDollars >= 8 &&
+        effectiveCostDollars < 12
+      ) {
+        // If user is willing to pay $8-$11 but can't walk 0.5+ miles, recommend cheaper garage instead
+        // Surface lots require at least 0.5 miles walking distance, but cheaper garages are closer (0.2-0.3 miles)
+        recKey = "cheaperGarage";
+      } else if (walkMiles > 0 && effectiveCostDollars >= 1) {
+        // If user is willing to pay $1-$7, recommend metered street parking ($1.50/hour, 2-3 hour max)
+        // Meters are the most affordable paid option but have time limits
+        recKey = "meteredParking";
+      } else if (effectiveCostDollars < 1) {
+        // If user won't pay or parking is not enforced, recommend free street parking
         recKey = "freeStreet";
       } else {
         recKey = "premiumRamp";
@@ -1201,7 +1287,19 @@ function buildRecommendation() {
         steps.push(...recommendation.steps);
       }
       if (recommendation.alternate) {
-        alternate = recommendation.alternate;
+        // Don't show surface lot alternate if user can't walk 0.5+ miles
+        // Surface lots require at least 0.5 miles walking distance
+        if (
+          recKey === "cheaperGarage" &&
+          walkMiles < 0.5 &&
+          recommendation.alternate.title &&
+          recommendation.alternate.title.toLowerCase().includes("surface lot")
+        ) {
+          // Skip the alternate for surface lots when walk distance is insufficient
+          alternate = null;
+        } else {
+          alternate = recommendation.alternate;
+        }
       }
     }
   } else if (hasTransit) {
@@ -1393,6 +1491,8 @@ async function init() {
   window.state = state;
   window.appData = appData;
   window.isParkingEnforced = isParkingEnforced;
+  window.calculateRequiredMeteredParkingCost =
+    calculateRequiredMeteredParkingCost;
 
   // Initialize UI
   updateModesSectionState();

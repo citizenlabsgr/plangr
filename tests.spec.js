@@ -67,10 +67,10 @@ test.describe("URL Fragment Permutations", () => {
   });
 
   test("should parse day parameter", async ({ page }) => {
-    await page.goto("/#day=tomorrow");
+    await page.goto("/#day=monday");
     await page.waitForTimeout(500);
-    expect(await page.evaluate(() => window.state.day)).toBe("tomorrow");
-    expect(await page.locator("#daySelect")).toHaveValue("tomorrow");
+    expect(await page.evaluate(() => window.state.day)).toBe("monday");
+    expect(await page.locator("#daySelect")).toHaveValue("monday");
   });
 
   test("should parse people parameter", async ({ page }) => {
@@ -124,7 +124,7 @@ test.describe("URL Fragment Permutations", () => {
     await page.waitForTimeout(500);
 
     // Set required fields first (destination is already set, need day and time)
-    await page.locator("#daySelect").selectOption({ value: "today" });
+    await page.locator("#daySelect").selectOption({ value: "monday" });
     await page.locator("#timeSelect").selectOption({ value: "17:00" });
     await page.waitForTimeout(300);
 
@@ -153,7 +153,7 @@ test.describe("URL Fragment Permutations", () => {
     await page.waitForTimeout(500);
 
     // Set required fields first (destination is already set, need day and time)
-    await page.locator("#daySelect").selectOption({ value: "today" });
+    await page.locator("#daySelect").selectOption({ value: "monday" });
     await page.locator("#timeSelect").selectOption({ value: "17:00" });
     await page.waitForTimeout(300);
 
@@ -449,7 +449,7 @@ test.describe("Parking Enforcement Logic", () => {
     await expect(saveButton).toBeDisabled();
 
     // Select day first (don't select time yet to avoid auto-collapse)
-    await page.selectOption("#daySelect", "tomorrow");
+    await page.selectOption("#daySelect", "monday");
     await page.waitForTimeout(200);
 
     // Verify save button is still disabled (time not set yet)
@@ -512,5 +512,66 @@ test.describe("Parking Enforcement Logic", () => {
 
     // Reset button should now be visible (time has been changed)
     await expect(resetButton).not.toHaveClass(/hidden/);
+  });
+
+  test("should show no options when budget is insufficient for required metered parking during enforcement", async ({
+    page,
+  }) => {
+    // Test: Friday at 6:00 PM (18:00), parking enforced until 7pm, budget is $2
+    // Required cost: 1 hour until 7pm = $4.00 (at $2.00 per half hour)
+    // User budget: $2, which is insufficient
+    // No free street parking available within 0.5 miles
+    await page.goto("/#modes=drive&day=friday&time=600&pay=2&walk=0.5");
+    await page.waitForSelector("#results");
+    await page.waitForTimeout(500);
+
+    // Wait for state to be initialized correctly
+    await expect(async () => {
+      const state = await page.evaluate(() => window.state);
+      if (
+        !state ||
+        state.costDollars !== 2 ||
+        state.day !== "friday" ||
+        state.time !== "18:00"
+      ) {
+        throw new Error(`State not initialized: ${JSON.stringify(state)}`);
+      }
+    }).toPass({ timeout: 7000 });
+
+    // Check that the recommendation shows "Unknown Strategy" / "No options available"
+    const results = page.locator("#results");
+    await expect(results).toContainText("Unknown Strategy");
+    await expect(results).toContainText("No options available");
+  });
+
+  test("should not recommend surface lots when walk distance is less than 0.5 miles", async ({
+    page,
+  }) => {
+    // Test: Friday at 6:00 PM (18:00), budget is $9, walk distance is 0.2 miles
+    // Surface lots require at least 0.5 miles walking distance (they're 0.2-0.5 miles from Van Andel)
+    // Should recommend cheaper garage instead (0.2-0.3 miles away, $1.50/hour, max $12)
+    await page.goto("/#modes=drive&day=friday&time=600&walk=0.2&pay=9");
+    await page.waitForSelector("#results");
+    await page.waitForTimeout(500);
+
+    // Wait for state to be initialized correctly
+    await expect(async () => {
+      const state = await page.evaluate(() => window.state);
+      if (
+        !state ||
+        state.costDollars !== 9 ||
+        state.day !== "friday" ||
+        state.time !== "18:00" ||
+        state.walkMiles !== 0.2
+      ) {
+        throw new Error(`State not initialized: ${JSON.stringify(state)}`);
+      }
+    }).toPass({ timeout: 7000 });
+
+    // Check that the recommendation is for cheaper garage, not surface lot
+    const results = page.locator("#results");
+    await expect(results).toContainText("city parking garage");
+    await expect(results).not.toContainText("surface lot");
+    await expect(results).not.toContainText("affordable surface lot");
   });
 });
