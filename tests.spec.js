@@ -401,16 +401,14 @@ test.describe("Parking Enforcement Logic", () => {
     });
   });
 
-  test("should not show clear button when only time is set", async ({
-    page,
-  }) => {
+  test("should show clear button when only time is set", async ({ page }) => {
     // Test: Only time is set in URL (7:00 PM = 19:00, but URL format is 700 = 7:00 PM)
     await page.goto("/#time=700");
     await page.waitForTimeout(500);
 
-    // Check that reset button is hidden (since day hasn't been changed)
+    // Check that reset button is visible (since time has been changed)
     const resetButton = page.locator("#resetButton");
-    await expect(resetButton).toHaveClass(/hidden/);
+    await expect(resetButton).not.toHaveClass(/hidden/);
 
     // Since day no longer defaults and destination is set, but day is empty,
     // the card should NOT be auto-collapsed (content visible, minimized view hidden)
@@ -418,8 +416,8 @@ test.describe("Parking Enforcement Logic", () => {
     const whereWhenMinimized = page.locator("#whereWhenMinimized");
     await expect(whereWhenContent).not.toHaveClass(/hidden/);
     await expect(whereWhenMinimized).toHaveClass(/hidden/);
-    // Reset button should be hidden when card is not collapsed and nothing changed
-    await expect(resetButton).toHaveClass(/hidden/);
+    // Reset button should be visible when card is not collapsed and time is changed
+    await expect(resetButton).not.toHaveClass(/hidden/);
   });
 
   test("should collapse card when save button is clicked", async ({ page }) => {
@@ -493,5 +491,26 @@ test.describe("Parking Enforcement Logic", () => {
     // Reset button should be hidden when card is collapsed
     const resetButton = page.locator("#resetButton");
     await expect(resetButton).toHaveClass(/hidden/);
+  });
+
+  test("should show clear button when time is selected via UI", async ({
+    page,
+  }) => {
+    // Start with a clean page (no fragment)
+    await page.goto("/");
+    await page.waitForSelector("#whereWhenContent", { state: "attached" });
+    await page.waitForTimeout(300);
+
+    const resetButton = page.locator("#resetButton");
+
+    // Initially, reset button should be hidden (nothing changed)
+    await expect(resetButton).toHaveClass(/hidden/);
+
+    // Select time via the dropdown
+    await page.selectOption("#timeSelect", "18:00");
+    await page.waitForTimeout(300);
+
+    // Reset button should now be visible (time has been changed)
+    await expect(resetButton).not.toHaveClass(/hidden/);
   });
 });

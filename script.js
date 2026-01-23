@@ -568,9 +568,9 @@ function updateMinimizeButtonState() {
   // Only update if the card is not collapsed (minimized view is hidden)
   if (whereWhenMinimized && whereWhenMinimized.classList.contains("hidden")) {
     // Reset button can be shown independently in top right if there's anything to clear
-    // Only show when day is changed (time changes don't require a reset button)
+    // Show when day or time is changed
     if (resetBtn) {
-      if (dayChanged) {
+      if (dayChanged || timeChanged) {
         resetBtn.classList.remove("hidden");
       } else {
         resetBtn.classList.add("hidden");
@@ -713,15 +713,6 @@ function expandWhereWhen() {
   whereWhenMinimized.classList.add("hidden");
   // Update reset button visibility when expanded
   updateMinimizeButtonState();
-  // Show reset button in top right when expanded, if there's anything to clear (day changed)
-  const resetBtn = document.getElementById("resetButton");
-  if (resetBtn) {
-    if (dayChanged) {
-      resetBtn.classList.remove("hidden");
-    } else {
-      resetBtn.classList.add("hidden");
-    }
-  }
 }
 
 whereWhenExpand.addEventListener("click", expandWhereWhen);
