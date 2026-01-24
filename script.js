@@ -157,13 +157,31 @@ function timeFromUrl(urlTime) {
   return urlTime; // Fallback if already in HH:MM format
 }
 
-// Parse URL fragment (format: #modes=drive,transit&day=monday&time=1800&people=2)
+// Base path for the destination (hash-based)
+const DESTINATION_PATH = "/visit/van-andel-arena";
+
+// Parse URL fragment (format: #/visit/van-andel-arena?modes=drive,transit&day=monday&time=1800&people=2)
 function parseFragment() {
   const hash = window.location.hash.slice(1); // Remove the #
   if (!hash) return {};
 
+  // Check if hash starts with a path (starts with /)
+  let queryString = "";
+  if (hash.startsWith("/")) {
+    // Extract query string if present (after ?)
+    const questionMarkIndex = hash.indexOf("?");
+    if (questionMarkIndex !== -1) {
+      queryString = hash.slice(questionMarkIndex + 1);
+    }
+  } else {
+    // Legacy format: just query params without path
+    queryString = hash;
+  }
+
+  if (!queryString) return {};
+
   const params = {};
-  hash.split("&").forEach((param) => {
+  queryString.split("&").forEach((param) => {
     const [key, ...valueParts] = param.split("=");
     const value = valueParts.length > 0 ? valueParts.join("=") : undefined;
     if (key && value !== undefined) {
@@ -202,7 +220,10 @@ function updateFragment() {
   if (costChanged && state.costDollars !== undefined) {
     parts.push(`pay=${encodeURIComponent(state.costDollars)}`);
   }
-  window.location.hash = parts.length > 0 ? parts.join("&") : "";
+
+  // Build hash with destination path and query params
+  const queryString = parts.length > 0 ? `?${parts.join("&")}` : "";
+  window.location.hash = DESTINATION_PATH + queryString;
 }
 
 // Update results whenever state changes
@@ -1374,6 +1395,23 @@ function buildRecommendation() {
 
 // Initialize application
 async function init() {
+  // Migrate old hash format to new format with destination path
+  const currentHash = window.location.hash.slice(1); // Remove the #
+  if (currentHash && !currentHash.startsWith(DESTINATION_PATH)) {
+    // If hash exists but doesn't start with destination path, migrate it
+    // Preserve any existing params by converting to query string format
+    if (currentHash.includes("=")) {
+      // Old format: params directly in hash
+      window.location.hash = DESTINATION_PATH + "?" + currentHash;
+    } else {
+      // No params, just set destination path
+      window.location.hash = DESTINATION_PATH;
+    }
+  } else if (!currentHash) {
+    // No hash at all, set destination path
+    window.location.hash = DESTINATION_PATH;
+  }
+
   // Load data first
   await loadData();
 
@@ -1524,16 +1562,8 @@ function resetAll() {
   walkChanged = false;
   costChanged = false;
 
-  // Clear URL fragment completely
-  if (window.history.replaceState) {
-    window.history.replaceState(
-      null,
-      "",
-      window.location.pathname + window.location.search,
-    );
-  } else {
-    window.location.hash = "";
-  }
+  // Clear URL fragment completely (but keep destination path)
+  window.location.hash = DESTINATION_PATH;
 
   // Reset UI elements
   daySelect.value = state.day || ""; // Clear day select if no day is set
@@ -1604,16 +1634,8 @@ function resetModes() {
   }
 
   // Update URL without modes, walk, or pay
-  const newHash = newParts.length > 0 ? `#${newParts.join("&")}` : "";
-  if (window.history.replaceState) {
-    window.history.replaceState(
-      null,
-      "",
-      window.location.pathname + window.location.search + newHash,
-    );
-  } else {
-    window.location.hash = newHash;
-  }
+  const queryString = newParts.length > 0 ? `?${newParts.join("&")}` : "";
+  window.location.hash = DESTINATION_PATH + queryString;
 
   // Reload the page to reset state
   window.location.reload();
@@ -1623,8 +1645,8 @@ function resetModes() {
 const resetButton = document.getElementById("resetButton");
 if (resetButton) {
   resetButton.addEventListener("click", () => {
-    // Navigate to the page without the fragment to clear all state
-    window.location.href = window.location.pathname + window.location.search;
+    // Navigate to the destination path without query params to clear all state
+    window.location.hash = DESTINATION_PATH;
   });
 }
 

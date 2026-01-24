@@ -8,13 +8,13 @@ test.describe("URL Fragment Permutations", () => {
   });
 
   test("should parse single mode", async ({ page }) => {
-    await page.goto("/#modes=drive");
+    await page.goto("/#/visit/van-andel-arena?modes=drive");
     await page.waitForTimeout(500); // Wait for fragment parsing
     expect(await page.evaluate(() => window.state.modes)).toEqual(["drive"]);
   });
 
   test("should parse multiple modes", async ({ page }) => {
-    await page.goto("/#modes=drive,transit");
+    await page.goto("/#/visit/van-andel-arena?modes=drive,transit");
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.modes)).toEqual([
       "drive",
@@ -24,7 +24,7 @@ test.describe("URL Fragment Permutations", () => {
 
   test("should parse all valid modes", async ({ page }) => {
     await page.goto(
-      "/#modes=drive,rideshare,transit,micromobility,shuttle,bike",
+      "/#/visit/van-andel-arena?modes=drive,rideshare,transit,micromobility,shuttle,bike",
     );
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.modes)).toEqual([
@@ -38,7 +38,7 @@ test.describe("URL Fragment Permutations", () => {
   });
 
   test("should ignore invalid modes", async ({ page }) => {
-    await page.goto("/#modes=drive,invalid,transit");
+    await page.goto("/#/visit/van-andel-arena?modes=drive,invalid,transit");
     await page.waitForTimeout(500);
     const modes = await page.evaluate(() => window.state.modes);
     expect(modes).toContain("drive");
@@ -47,41 +47,41 @@ test.describe("URL Fragment Permutations", () => {
   });
 
   test("should parse time in 3-digit format (HMM)", async ({ page }) => {
-    await page.goto("/#time=830"); // 8:30 PM
+    await page.goto("/#/visit/van-andel-arena?time=830"); // 8:30 PM
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.time)).toBe("20:30");
     expect(await page.locator("#timeSelect")).toHaveValue("20:30");
   });
 
   test("should parse time in 4-digit format (HHMM)", async ({ page }) => {
-    await page.goto("/#time=1000"); // 10:00 PM
+    await page.goto("/#/visit/van-andel-arena?time=1000"); // 10:00 PM
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.time)).toBe("22:00");
     expect(await page.locator("#timeSelect")).toHaveValue("22:00");
   });
 
   test("should parse time 8:30 PM (830)", async ({ page }) => {
-    await page.goto("/#time=830");
+    await page.goto("/#/visit/van-andel-arena?time=830");
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.time)).toBe("20:30");
   });
 
   test("should parse day parameter", async ({ page }) => {
-    await page.goto("/#day=monday");
+    await page.goto("/#/visit/van-andel-arena?day=monday");
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.day)).toBe("monday");
     expect(await page.locator("#daySelect")).toHaveValue("monday");
   });
 
   test("should parse people parameter", async ({ page }) => {
-    await page.goto("/#people=3");
+    await page.goto("/#/visit/van-andel-arena?people=3");
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.people)).toBe(3);
     expect(await page.locator("#peopleCount")).toHaveText("3");
   });
 
   test("should parse people within valid range (1-6)", async ({ page }) => {
-    await page.goto("/#people=4");
+    await page.goto("/#/visit/van-andel-arena?people=4");
     await page.waitForTimeout(500);
     const people = await page.evaluate(() => window.state.people);
     expect(people).toBeGreaterThanOrEqual(1);
@@ -89,13 +89,15 @@ test.describe("URL Fragment Permutations", () => {
   });
 
   test("should ignore people outside valid range", async ({ page }) => {
-    await page.goto("/#people=10");
+    await page.goto("/#/visit/van-andel-arena?people=10");
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.people)).toBe(6); // Clamped to max
   });
 
   test("should parse combined parameters", async ({ page }) => {
-    await page.goto("/#modes=bike,shuttle&day=friday&time=1730&people=2");
+    await page.goto(
+      "/#/visit/van-andel-arena?modes=bike,shuttle&day=friday&time=1730&people=2",
+    );
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.modes)).toEqual([
       "bike",
@@ -107,13 +109,13 @@ test.describe("URL Fragment Permutations", () => {
   });
 
   test("should handle empty modes parameter", async ({ page }) => {
-    await page.goto("/#modes=");
+    await page.goto("/#/visit/van-andel-arena?modes=");
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.modes)).toEqual([]);
   });
 
   test("should handle URL-encoded parameters", async ({ page }) => {
-    await page.goto("/#day=next%20week&time=1900");
+    await page.goto("/#/visit/van-andel-arena?day=next%20week&time=1900");
     await page.waitForTimeout(500);
     expect(await page.evaluate(() => window.state.day)).toBe("next week");
     expect(await page.evaluate(() => window.state.time)).toBe("19:00");
@@ -133,7 +135,8 @@ test.describe("URL Fragment Permutations", () => {
     await page.waitForTimeout(300);
 
     const url = page.url();
-    expect(url).toContain("#modes=drive");
+    expect(url).toContain("#/visit/van-andel-arena");
+    expect(url).toContain("modes=drive");
   });
 
   test("should update fragment when time is selected", async ({ page }) => {
@@ -145,7 +148,8 @@ test.describe("URL Fragment Permutations", () => {
     await page.waitForTimeout(300);
 
     const url = page.url();
-    expect(url).toContain("#time=500"); // 5:00 PM in URL format
+    expect(url).toContain("#/visit/van-andel-arena");
+    expect(url).toContain("time=500"); // 5:00 PM in URL format
   });
 
   test("should update fragment with multiple modes", async ({ page }) => {
@@ -162,22 +166,23 @@ test.describe("URL Fragment Permutations", () => {
     await page.waitForTimeout(300);
 
     const url = page.url();
-    expect(url).toContain("#modes=drive,transit");
+    expect(url).toContain("#/visit/van-andel-arena");
+    expect(url).toContain("modes=drive,transit");
   });
 
   test("should handle time conversion edge cases", async ({ page }) => {
     // Test 5:00 PM (500)
-    await page.goto("/#time=500");
+    await page.goto("/#/visit/van-andel-arena?time=500");
     await page.waitForTimeout(500);
     await expect(page.locator("#timeSelect")).toHaveValue("17:00");
 
     // Test 9:30 PM (930)
-    await page.goto("/#time=930");
+    await page.goto("/#/visit/van-andel-arena?time=930");
     await page.waitForTimeout(500);
     await expect(page.locator("#timeSelect")).toHaveValue("21:30");
 
     // Test 10:00 PM (1000)
-    await page.goto("/#time=1000");
+    await page.goto("/#/visit/van-andel-arena?time=1000");
     await page.waitForTimeout(500);
     await expect(page.locator("#timeSelect")).toHaveValue("22:00");
   });
@@ -193,7 +198,7 @@ test.describe("Parking Enforcement Logic", () => {
     page,
   }) => {
     // Test Monday at 12:00 PM (noon) - should be enforced
-    await page.goto("/#day=monday&time=1200");
+    await page.goto("/#/visit/van-andel-arena?day=monday&time=1200");
     await page.waitForTimeout(500);
     const isEnforced = await page.evaluate(() => {
       return window.isParkingEnforced("monday", "12:00");
@@ -203,7 +208,7 @@ test.describe("Parking Enforcement Logic", () => {
 
   test("should NOT enforce parking on weekday after 7pm", async ({ page }) => {
     // Test Tuesday at 7:30 PM - should NOT be enforced
-    await page.goto("/#day=tuesday&time=1930");
+    await page.goto("/#/visit/van-andel-arena?day=tuesday&time=1930");
     await page.waitForTimeout(500);
     const isEnforced = await page.evaluate(() => {
       return window.isParkingEnforced("tuesday", "19:30");
@@ -213,7 +218,7 @@ test.describe("Parking Enforcement Logic", () => {
 
   test("should NOT enforce parking on weekday before 8am", async ({ page }) => {
     // Test Wednesday at 7:30 AM - should NOT be enforced
-    await page.goto("/#day=wednesday&time=0730");
+    await page.goto("/#/visit/van-andel-arena?day=wednesday&time=0730");
     await page.waitForTimeout(500);
     const isEnforced = await page.evaluate(() => {
       return window.isParkingEnforced("wednesday", "07:30");
@@ -223,7 +228,7 @@ test.describe("Parking Enforcement Logic", () => {
 
   test("should NOT enforce parking on weekends", async ({ page }) => {
     // Test Saturday at 2:00 PM - should NOT be enforced
-    await page.goto("/#day=saturday&time=1400");
+    await page.goto("/#/visit/van-andel-arena?day=saturday&time=1400");
     await page.waitForTimeout(500);
     const isEnforced = await page.evaluate(() => {
       return window.isParkingEnforced("saturday", "14:00");
@@ -235,7 +240,9 @@ test.describe("Parking Enforcement Logic", () => {
     page,
   }) => {
     // Set up: drive mode, willing to pay $10, willing to walk 0.5 miles, arriving Tuesday at 7:30 PM
-    await page.goto("/#modes=drive&day=tuesday&time=1930&walk=0.5&pay=10");
+    await page.goto(
+      "/#/visit/van-andel-arena?modes=drive&day=tuesday&time=1930&walk=0.5&pay=10",
+    );
     await page.waitForTimeout(500);
 
     // Check that the recommendation is for free street parking
@@ -247,7 +254,9 @@ test.describe("Parking Enforcement Logic", () => {
     page,
   }) => {
     // Set up: drive mode, willing to pay $5 (low budget), willing to walk 0.5 miles, arriving Saturday at 2:00 PM
-    await page.goto("/#modes=drive&day=saturday&time=1400&walk=0.5&pay=5");
+    await page.goto(
+      "/#/visit/van-andel-arena?modes=drive&day=saturday&time=1400&walk=0.5&pay=5",
+    );
     await page.waitForTimeout(500);
 
     // Check that the recommendation is for free street parking (since budget is low)
@@ -259,7 +268,9 @@ test.describe("Parking Enforcement Logic", () => {
     page,
   }) => {
     // Set up: drive mode, willing to pay $10, willing to walk 0.5 miles, arriving Monday at 6:00 PM
-    await page.goto("/#modes=drive&day=monday&time=1800&walk=0.5&pay=10");
+    await page.goto(
+      "/#/visit/van-andel-arena?modes=drive&day=monday&time=1800&walk=0.5&pay=10",
+    );
     await page.waitForTimeout(500);
 
     // Check that the recommendation is for affordable surface lot (since user is willing to pay $8-$19)
@@ -271,7 +282,9 @@ test.describe("Parking Enforcement Logic", () => {
     page,
   }) => {
     // Set up: drive mode, willing to pay $10, willing to walk 0.5 miles, arriving Monday at 6:00 PM (still enforced)
-    await page.goto("/#modes=drive&day=monday&time=1800&walk=0.5&pay=10");
+    await page.goto(
+      "/#/visit/van-andel-arena?modes=drive&day=monday&time=1800&walk=0.5&pay=10",
+    );
     await page.waitForTimeout(500);
 
     // Check that the recommendation is for affordable surface lot (since willing to pay $10 >= $8)
@@ -283,7 +296,9 @@ test.describe("Parking Enforcement Logic", () => {
     page,
   }) => {
     // Set up: drive mode, unwilling to pay ($0), willing to walk 0.5 miles, arriving Monday at 6:00 PM (during enforcement 8am-7pm)
-    await page.goto("/#modes=drive&day=monday&time=1800&walk=0.5&pay=0");
+    await page.goto(
+      "/#/visit/van-andel-arena?modes=drive&day=monday&time=1800&walk=0.5&pay=0",
+    );
     // Wait for results to render
     const results = page.locator("#results");
     await results.waitFor();
@@ -310,7 +325,9 @@ test.describe("Parking Enforcement Logic", () => {
     page,
   }) => {
     // Set up: drive mode, unwilling to pay ($0), willing to walk 0.5 miles, arriving Tuesday at 7:30 PM (after enforcement ends)
-    await page.goto("/#modes=drive&day=tuesday&time=1930&walk=0.5&pay=0");
+    await page.goto(
+      "/#/visit/van-andel-arena?modes=drive&day=tuesday&time=1930&walk=0.5&pay=0",
+    );
     await page.waitForTimeout(500);
 
     // Check that the recommendation is for free street parking (parking not enforced after 7pm)
@@ -322,7 +339,9 @@ test.describe("Parking Enforcement Logic", () => {
     page,
   }) => {
     // Set up: drive mode, unwilling to pay ($0), willing to walk 0.5 miles, arriving Saturday at 2:00 PM (weekend, not enforced)
-    await page.goto("/#modes=drive&day=saturday&time=1400&walk=0.5&pay=0");
+    await page.goto(
+      "/#/visit/van-andel-arena?modes=drive&day=saturday&time=1400&walk=0.5&pay=0",
+    );
     await page.waitForTimeout(500);
 
     // Check that the recommendation is for free street parking (parking not enforced on weekends)
@@ -333,7 +352,9 @@ test.describe("Parking Enforcement Logic", () => {
   test("should show summary line below title for free street parking strategy", async ({
     page,
   }) => {
-    await page.goto("/#modes=drive&day=monday&time=600&walk=0.8&pay=3");
+    await page.goto(
+      "/#/visit/van-andel-arena?modes=drive&day=monday&time=600&walk=0.8&pay=3",
+    );
     await page.waitForSelector("#results");
     await page.waitForTimeout(500);
 
@@ -351,7 +372,9 @@ test.describe("Parking Enforcement Logic", () => {
     page,
   }) => {
     // Set up: drive mode, willing to pay $10, willing to walk 0.5 miles, arriving Tuesday at 7:30 PM (after enforcement ends)
-    await page.goto("/#modes=drive&day=tuesday&time=1930&walk=0.5&pay=10");
+    await page.goto(
+      "/#/visit/van-andel-arena?modes=drive&day=tuesday&time=1930&walk=0.5&pay=10",
+    );
     await page.waitForTimeout(500);
 
     // Check that the recommendation is for affordable surface lot (since willing to pay $10 >= $8)
@@ -364,7 +387,9 @@ test.describe("Parking Enforcement Logic", () => {
     page,
   }) => {
     // Set up: drive mode, willing to pay $10, willing to walk 0.5 miles, arriving Saturday at 2:00 PM (weekend, not enforced)
-    await page.goto("/#modes=drive&day=saturday&time=1400&walk=0.5&pay=10");
+    await page.goto(
+      "/#/visit/van-andel-arena?modes=drive&day=saturday&time=1400&walk=0.5&pay=10",
+    );
     await page.waitForTimeout(500);
 
     // Check that the recommendation is for affordable surface lot (since willing to pay $10 >= $8)
@@ -403,7 +428,7 @@ test.describe("Parking Enforcement Logic", () => {
 
   test("should show clear button when only time is set", async ({ page }) => {
     // Test: Only time is set in URL (7:00 PM = 19:00, but URL format is 700 = 7:00 PM)
-    await page.goto("/#time=700");
+    await page.goto("/#/visit/van-andel-arena?time=700");
     await page.waitForTimeout(500);
 
     // Check that reset button is visible (since time has been changed)
@@ -521,7 +546,9 @@ test.describe("Parking Enforcement Logic", () => {
     // Required cost: 1 hour until 7pm = $4.00 (metered parking rates vary)
     // User budget: $2, which is insufficient
     // No free street parking available within 0.5 miles
-    await page.goto("/#modes=drive&day=friday&time=600&pay=2&walk=0.5");
+    await page.goto(
+      "/#/visit/van-andel-arena?modes=drive&day=friday&time=600&pay=2&walk=0.5",
+    );
     await page.waitForSelector("#results");
     await page.waitForTimeout(500);
 
@@ -550,7 +577,9 @@ test.describe("Parking Enforcement Logic", () => {
     // Test: Friday at 6:00 PM (18:00), budget is $9, walk distance is 0.2 miles
     // Surface lots require at least 0.5 miles walking distance (they're 0.2-0.5 miles from Van Andel)
     // Should recommend cheaper garage instead (0.2-0.3 miles away, city parking garage)
-    await page.goto("/#modes=drive&day=friday&time=600&walk=0.2&pay=9");
+    await page.goto(
+      "/#/visit/van-andel-arena?modes=drive&day=friday&time=600&walk=0.2&pay=9",
+    );
     await page.waitForSelector("#results");
     await page.waitForTimeout(500);
 
