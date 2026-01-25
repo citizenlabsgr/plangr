@@ -1181,14 +1181,291 @@ function processRecommendationData(recData, values) {
   return processed;
 }
 
+// Get all recommendations for a destination, flattened with metadata
+function getAllRecommendationsForDestination(destination) {
+  const allRecs = [];
+  const recommendations = appData.recommendations;
+
+  for (const [modeKey, variants] of Object.entries(recommendations)) {
+    for (const [variantKey, recData] of Object.entries(variants)) {
+      if (recData._metadata) {
+        allRecs.push({
+          ...recData,
+          modeKey,
+          variantKey,
+          metadata: recData._metadata,
+        });
+      }
+    }
+  }
+
+  return allRecs;
+}
+
+// Check if selected modes match required modes
+function matchesModes(rec, selectedModes) {
+  const requiredModes = rec.metadata?.requiredModes || [];
+  // All required modes must be in selected modes
+  return requiredModes.every((mode) => selectedModes.includes(mode));
+}
+
+// Check if walk distance matches constraints
+function matchesWalkDistance(rec, walkMiles) {
+  // Special handling for "noWalk" variant - only match when walkMiles is exactly 0
+  if (rec.variantKey === "noWalk") {
+    return walkMiles === 0;
+  }
+
+  const minWalk = rec.metadata?.minWalkMiles;
+  if (minWalk !== undefined && walkMiles < minWalk) {
+    return false;
+  }
+  return true;
+}
+
+// Check if cost matches constraints
+function matchesCost(rec, costDollars, state) {
+  const metadata = rec.metadata;
+  if (!metadata) return true;
+
+  const minCost = metadata.minCost;
+  const maxCost = metadata.maxCost;
+
+  // For drive mode, handle parking enforcement logic
+  if (rec.modeKey === "drive") {
+    const parkingEnforced = isParkingEnforced(state.day, state.time);
+    const safeCostDollars = costDollars ?? 0;
+
+    // Handle parking enforcement conditions
+    if (metadata.conditions?.parkingEnforced === true && !parkingEnforced) {
+      return false; // This recommendation requires parking to be enforced
+    }
+    if (metadata.conditions?.parkingEnforced === false && parkingEnforced) {
+      return false; // This recommendation requires parking NOT to be enforced
+    }
+
+    // For drive mode, calculate effective cost
+    const effectiveCostDollars =
+      !parkingEnforced && state.walkMiles > 0 && safeCostDollars < 8
+        ? 0
+        : safeCostDollars;
+
+    // Special handling for freeStreet variant - should be available when parking is not enforced
+    if (rec.variantKey === "freeStreet") {
+      // Free street parking is available when parking is not enforced
+      // It should pass the filter (so it can compete), but scoring will prefer paid options
+      if (parkingEnforced) {
+        return false; // Only available when parking is not enforced
+      }
+      // Don't check cost constraints here - let it compete with paid options via scoring
+      return true;
+    }
+
+    // Special handling for drive mode variants
+    if (rec.variantKey === "noCost") {
+      // Show noCost if:
+      // 1. Parking is enforced AND
+      // 2. (User won't pay OR user's budget is insufficient for required metered parking) AND
+      // 3. No free parking is available
+      if (!parkingEnforced) {
+        return false;
+      }
+
+      // Check if there's free parking available
+      const hasFreeParkingAvailable = state.walkMiles > 0.5;
+      if (hasFreeParkingAvailable) {
+        return false; // Don't show noCost if free parking is available
+      }
+
+      const requiredMeteredCost = calculateRequiredMeteredParkingCost(
+        state.day,
+        state.time,
+      );
+
+      // Show noCost if user can't afford required metered parking
+      if (requiredMeteredCost > 0 && safeCostDollars < requiredMeteredCost) {
+        return true; // User's budget is insufficient
+      }
+
+      // Also show if user won't pay (costDollars === 0) and parking is enforced
+      if (safeCostDollars === 0) {
+        return true;
+      }
+
+      return false;
+    }
+
+    // For other drive variants (except noWalk, freeStreet, noCost), check constraints
+    if (
+      rec.variantKey !== "freeStreet" &&
+      rec.variantKey !== "noWalk" &&
+      rec.variantKey !== "noCost"
+    ) {
+      if (parkingEnforced) {
+        // When parking is enforced, check if budget is sufficient for required metered parking
+        const requiredMeteredCost = calculateRequiredMeteredParkingCost(
+          state.day,
+          state.time,
+        );
+        const hasFreeParkingAvailable = state.walkMiles > 0.5;
+
+        // If no free parking available and required cost > 0, check if user can afford it
+        if (!hasFreeParkingAvailable && requiredMeteredCost > 0) {
+          if (safeCostDollars < requiredMeteredCost) {
+            // User can't afford required metered parking - only show noCost variant
+            return false;
+          }
+        }
+
+        // Also check: if user won't pay (costDollars === 0) and parking is enforced, don't show paid options
+        if (safeCostDollars === 0) {
+          return false; // User won't pay, so don't show paid parking options
+        }
+      } else {
+        // When parking is NOT enforced, filter out paid options if user has low budget (< $8) or won't pay
+        // Free street parking should be preferred when parking is free and budget is low
+        // But if user is willing to pay $8+, show paid options (they'll win via scoring)
+        if (safeCostDollars === 0 || safeCostDollars < 8) {
+          return false; // Don't show paid options when parking is free and user won't pay or has low budget
+        }
+      }
+    }
+
+    // Check cost constraints with effective cost (skip for freeStreet as it's handled above)
+    if (rec.variantKey !== "freeStreet") {
+      if (minCost !== undefined && effectiveCostDollars < minCost) {
+        return false;
+      }
+      // Don't filter out options based on maxCost - users with higher budgets can still use cheaper options
+      // maxCost is informational/used for scoring, not for filtering
+    }
+
+    if (rec.variantKey === "affordableLot") {
+      // Surface lots require at least 0.5 miles walking
+      if (state.walkMiles < 0.5) {
+        return false;
+      }
+    }
+
+    if (rec.variantKey === "cheaperGarage") {
+      // If user can walk 0.5+ miles and can pay $8-$11, prefer surface lot
+      // But if they can't walk 0.5 miles, show garage
+      // This preference is handled in scoring, not filtering
+    }
+
+    return true;
+  }
+
+  // For non-drive modes, simple cost check
+  if (minCost !== undefined && costDollars < minCost) {
+    return false;
+  }
+  if (maxCost !== undefined && costDollars > maxCost) {
+    return false;
+  }
+
+  return true;
+}
+
+// Calculate score for a recommendation (higher = better)
+function calculateScore(rec, state) {
+  const metadata = rec.metadata;
+  if (!metadata) return 0;
+
+  let score = metadata.priority || 0;
+
+  // Boost score for drive combinations
+  if (rec.modeKey.includes("+")) {
+    score += 50;
+  }
+
+  // Boost score for rideshare
+  if (rec.modeKey === "rideshare") {
+    score += 30;
+  }
+
+  // Penalize discouraged recommendations
+  if (rec.isDiscouraged) {
+    score -= 20;
+  }
+
+  // Penalize no-options recommendations
+  if (rec.isNoOptions) {
+    score -= 100;
+  }
+
+  // For drive mode, adjust score based on cost tiers
+  if (rec.modeKey === "drive") {
+    const parkingEnforced = isParkingEnforced(state.day, state.time);
+    const safeCostDollars = state.costDollars ?? 0;
+    const effectiveCostDollars =
+      !parkingEnforced && state.walkMiles > 0 && safeCostDollars < 8
+        ? 0
+        : safeCostDollars;
+
+    // When parking is not enforced:
+    // - If user is willing to pay $8+, prefer paid options (convenience over free)
+    // - Otherwise, prefer free street parking
+    if (!parkingEnforced) {
+      if (rec.variantKey === "freeStreet") {
+        if (effectiveCostDollars >= 8) {
+          score -= 30; // Discourage free street when user is willing to pay $8+
+        } else {
+          score += 50; // Strongly prefer free street parking when parking is free and budget is low
+        }
+      } else {
+        // Paid options when parking is free
+        if (effectiveCostDollars >= 8) {
+          score += 30; // Boost paid options when user is willing to pay $8+
+        } else {
+          score -= 30; // Lower priority for paid options when user has low budget and parking is free
+        }
+      }
+    }
+
+    // Higher cost options get higher scores (premium > garage > lot > meter > free)
+    if (rec.variantKey === "premiumRamp") {
+      score += 10;
+    } else if (rec.variantKey === "cheaperGarage") {
+      score += 5;
+      // Prefer affordableLot over cheaperGarage when walk distance is sufficient
+      if (
+        state.walkMiles >= 0.5 &&
+        effectiveCostDollars >= 8 &&
+        effectiveCostDollars < 12
+      ) {
+        score -= 2; // Lower score to prefer affordableLot
+      }
+    } else if (rec.variantKey === "affordableLot") {
+      score += 3;
+      // Boost score when walk distance is sufficient
+      if (
+        state.walkMiles >= 0.5 &&
+        effectiveCostDollars >= 8 &&
+        effectiveCostDollars < 12
+      ) {
+        score += 2; // Higher score to prefer over cheaperGarage
+      }
+    } else if (rec.variantKey === "meteredParking") {
+      score += 1;
+    } else if (rec.variantKey === "freeStreet") {
+      // Only apply penalty when parking is enforced (when parking is free, it's preferred)
+      if (parkingEnforced) {
+        score -= 5; // Base penalty for free street parking when parking is enforced
+      }
+    }
+  }
+
+  return score;
+}
+
+// Cache all recommendations for performance
+let allRecommendations = null;
+
 function buildRecommendation() {
-  const { modes, people, walkMiles, costDollars } = state;
+  const { modes, walkMiles, costDollars } = state;
 
   if (!modes || modes.length === 0) return { primary: null, alternate: null };
-
-  let steps = [];
-  let recommendation = {};
-  let alternate = null;
 
   // Prepare placeholder values
   const placeholders = {
@@ -1199,265 +1476,86 @@ function buildRecommendation() {
     ),
   };
 
-  // Check which modes are selected
-  const hasDrive = modes.includes("drive");
-  const hasTransit = modes.includes("transit");
-  const hasRideshare = modes.includes("rideshare");
-  const hasMicromobility = modes.includes("micromobility");
-  const hasShuttle = modes.includes("shuttle");
-  const hasBike = modes.includes("bike");
+  // Get all recommendations (cache for performance)
+  if (!allRecommendations) {
+    allRecommendations = getAllRecommendationsForDestination(state.destination);
+  }
 
-  // Build recommendation based on selected modes
-  // Priority: drive combinations > rideshare > drive-only > transit combinations > single modes
-
-  if (hasDrive && (hasShuttle || hasTransit || hasMicromobility)) {
-    // Drive mode combinations (these take priority)
-    if (hasShuttle) {
-      // Drive + Shuttle: Park farther, use DASH
-      const recKey = walkMiles === 0 ? "noWalk" : "default";
-      const recData = appData.recommendations["drive+shuttle"][recKey];
-      recommendation = processRecommendationData(recData, placeholders);
-      if (recommendation.steps) {
-        steps.push(...recommendation.steps);
-      }
-      // If this combination doesn't work, fall back to other modes
-      if (recommendation.isNoOptions && hasRideshare && costDollars >= 10) {
-        // Fall back to rideshare if available and budget is sufficient
-        const rideshareRecKey = costDollars < 10 ? "noCost" : "default";
-        const rideshareRecData =
-          appData.recommendations.rideshare[rideshareRecKey];
-        recommendation = processRecommendationData(
-          rideshareRecData,
-          placeholders,
-        );
-        steps = [];
-        if (recommendation.steps) {
-          steps.push(...recommendation.steps);
-        }
-      }
-    } else if (hasTransit) {
-      // Drive + Transit: Park at Rapid stop, take transit
-      const recKey = walkMiles === 0 ? "noWalk" : "default";
-      const recData = appData.recommendations["drive+transit"][recKey];
-      recommendation = processRecommendationData(recData, placeholders);
-      if (recommendation.steps) {
-        steps.push(...recommendation.steps);
-      }
-      // If this combination doesn't work, fall back to other modes
-      if (recommendation.isNoOptions) {
-        if (hasRideshare && costDollars >= 10) {
-          // Fall back to rideshare if available and budget is sufficient
-          const rideshareRecKey = costDollars < 10 ? "noCost" : "default";
-          const rideshareRecData =
-            appData.recommendations.rideshare[rideshareRecKey];
-          recommendation = processRecommendationData(
-            rideshareRecData,
-            placeholders,
-          );
-          steps = [];
-          if (recommendation.steps) {
-            steps.push(...recommendation.steps);
-          }
-        } else if (hasTransit && costDollars >= 2 && walkMiles > 0) {
-          // Fall back to transit-only if available
-          const transitRecKey =
-            costDollars < 2 ? "noCost" : walkMiles === 0 ? "noWalk" : "default";
-          const transitRecData = appData.recommendations.transit[transitRecKey];
-          recommendation = processRecommendationData(
-            transitRecData,
-            placeholders,
-          );
-          steps = [];
-          if (recommendation.steps) {
-            steps.push(...recommendation.steps);
-          }
-        }
-      }
-    } else if (hasMicromobility) {
-      // Drive + Micromobility: Park farther, use Lime
-      const recKey = walkMiles === 0 ? "noWalk" : "default";
-      const recData = appData.recommendations["drive+micromobility"][recKey];
-      recommendation = processRecommendationData(recData, placeholders);
-      if (recommendation.steps) {
-        steps.push(...recommendation.steps);
-      }
-      // If this combination doesn't work, fall back to other modes
-      if (recommendation.isNoOptions && hasRideshare && costDollars >= 10) {
-        // Fall back to rideshare if available and budget is sufficient
-        const rideshareRecKey = costDollars < 10 ? "noCost" : "default";
-        const rideshareRecData =
-          appData.recommendations.rideshare[rideshareRecKey];
-        recommendation = processRecommendationData(
-          rideshareRecData,
-          placeholders,
-        );
-        steps = [];
-        if (recommendation.steps) {
-          steps.push(...recommendation.steps);
-        }
-      }
-    }
-  } else if (hasRideshare) {
-    // Rideshare mode - prioritize over drive-only when both are selected
-    // Rideshare mode - requires at least $10
-    const recKey = costDollars < 10 ? "noCost" : "default";
-    const recData = appData.recommendations.rideshare[recKey];
-    recommendation = processRecommendationData(recData, placeholders);
-    if (recommendation.steps) {
-      steps.push(...recommendation.steps);
-    }
-  } else if (hasDrive) {
-    // Drive only (only if rideshare is not selected)
-    // Adjust effective cost based on parking enforcement
-    const parkingEnforced = isParkingEnforced(state.day, state.time);
-    // If parking is free (after 7pm on weekdays or weekends) and user has low budget (< $8),
-    // treat as $0 to recommend free street parking
-    // If user is willing to pay $8+, use their actual budget to recommend paid parking
-    // Handle undefined costDollars (defaults to 0)
-    const safeCostDollars = costDollars ?? 0;
-    const effectiveCostDollars =
-      !parkingEnforced && walkMiles > 0 && safeCostDollars < 8
-        ? 0
-        : safeCostDollars;
-
-    // Calculate required metered parking cost if parking is enforced
-    // There's no free street parking within 0.5 miles of Van Andel Arena during enforcement hours
-    const requiredMeteredCost = calculateRequiredMeteredParkingCost(
-      state.day,
-      state.time,
+  // Filter recommendations by basic constraints
+  const filtered = allRecommendations.filter((rec) => {
+    return (
+      matchesModes(rec, modes) &&
+      matchesWalkDistance(rec, walkMiles) &&
+      matchesCost(rec, costDollars, state)
     );
-    const hasFreeParkingAvailable = !parkingEnforced || walkMiles > 0.5;
+  });
 
-    let recKey;
-    if (walkMiles === 0) {
-      recKey = "noWalk";
-    } else if (parkingEnforced && safeCostDollars === 0) {
-      // If parking is enforced and user won't pay (cost is $0), no options available
-      recKey = "noCost";
-    } else if (
-      parkingEnforced &&
-      !hasFreeParkingAvailable &&
-      requiredMeteredCost > 0 &&
-      safeCostDollars < requiredMeteredCost
-    ) {
-      // If parking is enforced, no free parking available, and user's budget is less than required metered cost
-      recKey = "noCost";
-    } else if (walkMiles > 0 && effectiveCostDollars >= 20) {
-      // If user is willing to pay $20+, recommend premium ramps (structured parking garages, $27-$30)
-      // Premium ramps like Arena Place Garage are directly across from the arena
-      recKey = "premiumRamp";
-    } else if (walkMiles > 0 && effectiveCostDollars >= 12) {
-      // If user is willing to pay $12-$19, recommend city parking garages ($1.50/hour, max $12)
-      // City garages like Monroe Center Ramp and Ottawa-Fulton Ramp are affordable structured parking
-      recKey = "cheaperGarage";
-    } else if (
-      walkMiles >= 0.5 &&
-      effectiveCostDollars >= 8 &&
-      effectiveCostDollars < 12
-    ) {
-      // If user is willing to pay $8-$11 and can walk at least 0.5 miles, recommend affordable surface lots ($8-$10 for 4 hours)
-      // Surface lots are cheaper than garages but fill up quickly and are 0.2-0.5 miles from Van Andel Arena
-      recKey = "affordableLot";
-    } else if (
-      walkMiles > 0 &&
+  // Calculate scores and sort
+  const scored = filtered.map((rec) => ({
+    rec,
+    score: calculateScore(rec, state),
+  }));
+
+  // Sort by score (highest first)
+  scored.sort((a, b) => b.score - a.score);
+
+  // Get primary recommendation
+  const primaryScored = scored[0];
+  if (!primaryScored) {
+    return { primary: null, alternate: null };
+  }
+
+  // Process primary recommendation
+  let primary = processRecommendationData(primaryScored.rec, placeholders);
+  if (!primary) {
+    return { primary: null, alternate: null };
+  }
+
+  // Handle alternate recommendation
+  let alternate = null;
+  let useExplicitAlternate = false;
+  if (primary.alternate) {
+    // Don't show surface lot alternate if user can't walk 0.5+ miles
+    if (
+      primaryScored.rec.modeKey === "drive" &&
+      primaryScored.rec.variantKey === "cheaperGarage" &&
       walkMiles < 0.5 &&
-      effectiveCostDollars >= 8 &&
-      effectiveCostDollars < 12
+      primary.alternate.title &&
+      primary.alternate.title.toLowerCase().includes("surface lot")
     ) {
-      // If user is willing to pay $8-$11 but can't walk 0.5+ miles, recommend cheaper garage instead
-      // Surface lots require at least 0.5 miles walking distance, but cheaper garages are closer (0.2-0.3 miles)
-      recKey = "cheaperGarage";
-    } else if (walkMiles > 0 && effectiveCostDollars >= 1) {
-      // If user is willing to pay $1-$7, recommend metered street parking ($1.50/hour, 2-3 hour max)
-      // Meters are the most affordable paid option but have time limits
-      recKey = "meteredParking";
-    } else if (effectiveCostDollars < 1) {
-      // If user won't pay or parking is not enforced, recommend free street parking
-      recKey = "freeStreet";
+      // Explicit alternate filtered out, will fall through to check second-best option
+      useExplicitAlternate = false;
     } else {
-      recKey = "premiumRamp";
-    }
-
-    const recData = appData.recommendations.drive[recKey];
-    recommendation = processRecommendationData(recData, placeholders);
-    if (recommendation.steps) {
-      steps.push(...recommendation.steps);
-    }
-    if (recommendation.alternate) {
-      // Don't show surface lot alternate if user can't walk 0.5+ miles
-      // Surface lots require at least 0.5 miles walking distance
-      if (
-        recKey === "cheaperGarage" &&
-        walkMiles < 0.5 &&
-        recommendation.alternate.title &&
-        recommendation.alternate.title.toLowerCase().includes("surface lot")
-      ) {
-        // Skip the alternate for surface lots when walk distance is insufficient
-        alternate = null;
-      } else {
-        alternate = recommendation.alternate;
-      }
-    }
-  } else if (hasTransit) {
-    // Transit mode
-    if (hasShuttle) {
-      // Transit + Shuttle: Take Rapid, then DASH - requires at least $2
-      let recKey;
-      if (costDollars < 2) {
-        recKey = "noCost";
-      } else if (walkMiles === 0) {
-        recKey = "noWalk";
-      } else {
-        recKey = "default";
-      }
-      const recData = appData.recommendations["transit+shuttle"][recKey];
-      recommendation = processRecommendationData(recData, placeholders);
-      if (recommendation.steps) {
-        steps.push(...recommendation.steps);
-      }
-    } else {
-      // Transit only - requires at least $2
-      let recKey;
-      if (costDollars < 2) {
-        recKey = "noCost";
-      } else if (walkMiles === 0) {
-        recKey = "noWalk";
-      } else {
-        recKey = "default";
-      }
-      const recData = appData.recommendations.transit[recKey];
-      recommendation = processRecommendationData(recData, placeholders);
-      if (recommendation.steps) {
-        steps.push(...recommendation.steps);
-      }
-    }
-  } else if (hasMicromobility) {
-    // Micromobility mode - requires at least $4
-    const recKey = costDollars < 4 ? "noCost" : "default";
-    const recData = appData.recommendations.micromobility[recKey];
-    recommendation = processRecommendationData(recData, placeholders);
-    if (recommendation.steps) {
-      steps.push(...recommendation.steps);
-    }
-  } else if (hasShuttle) {
-    // Shuttle mode (DASH)
-    const recKey = walkMiles === 0 ? "noWalk" : "default";
-    const recData = appData.recommendations.shuttle[recKey];
-    recommendation = processRecommendationData(recData, placeholders);
-    if (recommendation.steps) {
-      steps.push(...recommendation.steps);
-    }
-  } else if (hasBike) {
-    // Bike mode
-    const recData = appData.recommendations.bike.default;
-    recommendation = processRecommendationData(recData, placeholders);
-    if (recommendation.steps) {
-      steps.push(...recommendation.steps);
+      alternate = primary.alternate;
+      useExplicitAlternate = true;
     }
   }
 
-  recommendation.steps = steps;
-  return { primary: recommendation, alternate: alternate };
+  // If no explicit alternate (or it was filtered out), check if second-best option should be shown as alternate
+  if (!useExplicitAlternate) {
+    const secondScored = scored[1];
+    if (
+      secondScored &&
+      secondScored.score > 0 &&
+      !secondScored.rec.isNoOptions
+    ) {
+      // For drive mode, show alternate if it's a different variant or has good score
+      if (primaryScored.rec.modeKey === "drive") {
+        // Show alternate if it's a different variant (e.g., meteredParking as alternate for cheaperGarage)
+        if (
+          secondScored.rec.modeKey === "drive" &&
+          secondScored.rec.variantKey !== primaryScored.rec.variantKey
+        ) {
+          alternate = processRecommendationData(secondScored.rec, placeholders);
+        } else if (secondScored.rec.modeKey !== primaryScored.rec.modeKey) {
+          // Or if it's a different mode
+          alternate = processRecommendationData(secondScored.rec, placeholders);
+        }
+      }
+    }
+  }
+
+  return { primary, alternate };
 }
 
 // Initialize application
@@ -1481,6 +1579,9 @@ async function init() {
 
   // Load data first
   await loadData();
+
+  // Reset recommendations cache when data is loaded
+  allRecommendations = null;
 
   // Initialize state from loaded data
   state = {
