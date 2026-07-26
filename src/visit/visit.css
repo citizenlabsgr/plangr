@@ -97,6 +97,38 @@ main.parking-map-active {
   min-height: 8rem;
 }
 
+/* Destination custom listbox (replaces native <select> open UI). */
+.parking-dest-select-mirror {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.parking-dest-panel[hidden] {
+  display: none;
+}
+
+.parking-dest-more-wrap {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.parking-dest-more {
+  background: transparent;
+  border: 0;
+  padding: 0.15rem 0;
+  cursor: pointer;
+  font: inherit;
+}
+
 /* Sits under the map; height follows content (map column keeps flex growth). */
 #parkingRouteInstructions {
   flex: 0 0 auto;

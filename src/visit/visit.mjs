@@ -778,6 +778,8 @@ let parkingUserLocationError = "";
 let parkingLocateControlDelegated = false;
 let parkingFilterBarDelegated = false;
 let parkingDestinationSelectDelegated = false;
+/** When true, the destination listbox also lists venues marked `hidden` in data. */
+let parkingDestShowHiddenChoices = false;
 let parkingResetDelegated = false;
 let parkingEveningBudgetDelegated = false;
 let parkingWalkDelegated = false;
@@ -1324,6 +1326,7 @@ function ensureParkingFilterBarDelegation() {
 }
 
 function applyParkingDestinationFromSelectChange() {
+  closeParkingDestinationPanel();
   syncParkingDestinationSelectAppearance();
   const sel = document.getElementById("parkingDestinationSelect");
   if (!sel) return;
@@ -1335,7 +1338,6 @@ function applyParkingDestinationFromSelectChange() {
     undefined,
   );
   if (parkingMap) syncParkingMapOverlays(parkingMap);
-  sel.blur();
 }
 
 /** Programmatic destination choice (map pins); keeps hash + overlays in sync with the dropdown. */
@@ -1353,6 +1355,7 @@ function clearParkingDestinationFromMap() {
   const sel = document.getElementById("parkingDestinationSelect");
   if (!sel) return;
   sel.value = "";
+  closeParkingDestinationPanel();
   syncParkingDestinationSelectAppearance();
   window.location.hash = buildParkingHashFromState(
     new Set(getEnabledParkingKeys()),
@@ -1364,36 +1367,40 @@ function clearParkingDestinationFromMap() {
   if (parkingMap) syncParkingMapOverlays(parkingMap);
 }
 
-function ensureParkingDestinationSelectDelegation() {
-  if (parkingDestinationSelectDelegated) return;
-  const sel = document.getElementById("parkingDestinationSelect");
-  if (!sel) return;
-  parkingDestinationSelectDelegated = true;
-  sel.addEventListener("change", applyParkingDestinationFromSelectChange);
+function isParkingDestinationPanelOpen() {
+  const panel = document.getElementById("parkingDestinationPanel");
+  return !!(panel && !panel.classList.contains("hidden"));
 }
 
-function syncParkingDestinationSelectAppearance() {
-  const sel = document.getElementById("parkingDestinationSelect");
-  if (!sel) return;
-  const empty = sel.value === "";
-  if (empty) {
-    sel.classList.remove("text-slate-900");
-    sel.classList.add("text-slate-500");
-  } else {
-    sel.classList.remove("text-slate-500");
-    sel.classList.add("text-slate-900");
+function closeParkingDestinationPanel() {
+  const panel = document.getElementById("parkingDestinationPanel");
+  const trigger = document.getElementById("parkingDestinationTrigger");
+  if (panel) {
+    panel.classList.add("hidden");
+    panel.hidden = true;
   }
-  const chevron = document.getElementById("parkingDestChevron");
-  const resetBtn = document.getElementById("parkingResetBtn");
-  if (chevron) chevron.classList.toggle("hidden", !empty);
-  if (resetBtn) resetBtn.classList.toggle("hidden", empty);
+  if (trigger) trigger.setAttribute("aria-expanded", "false");
 }
 
-function buildParkingDestinationSelect() {
-  const sel = document.getElementById("parkingDestinationSelect");
-  if (!sel) return;
-  ensureParkingDestinationSelectDelegation();
-  const urlDest = parseParkingDestSlugFromHash();
+function openParkingDestinationPanel() {
+  const panel = document.getElementById("parkingDestinationPanel");
+  const trigger = document.getElementById("parkingDestinationTrigger");
+  if (!panel || !trigger) return;
+  panel.classList.remove("hidden");
+  panel.hidden = false;
+  trigger.setAttribute("aria-expanded", "true");
+}
+
+function toggleParkingDestinationPanel() {
+  if (isParkingDestinationPanelOpen()) closeParkingDestinationPanel();
+  else openParkingDestinationPanel();
+}
+
+/**
+ * Sorted destination records with valid coordinates for the visit dropdown.
+ * @returns {{ slug: string, name: string, hidden: boolean }[]}
+ */
+function listParkingDestinationChoices() {
   const destinations = Array.isArray(appData?.destinations)
     ? [...appData.destinations].sort((a, b) =>
         String(a.name || "").localeCompare(String(b.name || ""), undefined, {
@@ -1401,6 +1408,147 @@ function buildParkingDestinationSelect() {
         }),
       )
     : [];
+  /** @type {{ slug: string, name: string, hidden: boolean }[]} */
+  const out = [];
+  for (const d of destinations) {
+    const lat = d.latitude ?? d.location?.latitude;
+    const lng = d.longitude ?? d.location?.longitude;
+    if (typeof lat !== "number" || typeof lng !== "number") continue;
+    if (typeof d.slug !== "string" || d.slug.trim() === "") continue;
+    out.push({
+      slug: d.slug,
+      name: d.name || d.slug,
+      hidden: isDestinationHiddenFromPublicMaps(d),
+    });
+  }
+  return out;
+}
+
+function fillParkingDestinationPanel() {
+  const panel = document.getElementById("parkingDestinationPanel");
+  const sel = document.getElementById("parkingDestinationSelect");
+  if (!panel || !sel) return;
+  const choices = listParkingDestinationChoices();
+  const selected = sel.value;
+  const visible = choices.filter((c) => !c.hidden);
+  const hiddenChoices = choices.filter((c) => c.hidden);
+  const showHidden = parkingDestShowHiddenChoices;
+
+  const optionButtonHtml = (c) => {
+    const isSel = c.slug === selected;
+    return `<button type="button" role="option" class="parking-dest-option w-full px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-50${isSel ? " bg-slate-100" : ""}" data-dest-slug="${escapeHtml(c.slug)}" aria-selected="${isSel ? "true" : "false"}">${escapeHtml(c.name)}</button>`;
+  };
+
+  const visibleHtml = visible.map(optionButtonHtml).join("");
+  let belowHrHtml = "";
+  if (hiddenChoices.length > 0) {
+    if (showHidden) {
+      belowHrHtml =
+        `<div class="parking-dest-more-section border-t border-slate-100 py-1">` +
+        hiddenChoices.map(optionButtonHtml).join("") +
+        `</div>`;
+    } else {
+      belowHrHtml =
+        `<div class="parking-dest-more-wrap border-t border-slate-100 px-3 py-1.5">` +
+        `<button type="button" id="parkingDestMoreBtn" class="parking-dest-more text-[11px] leading-snug text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline focus:outline-none focus-visible:text-slate-600 focus-visible:underline">Show more…</button>` +
+        `</div>`;
+    }
+  }
+
+  panel.innerHTML = visibleHtml + belowHrHtml;
+}
+
+function ensureParkingDestinationSelectDelegation() {
+  if (parkingDestinationSelectDelegated) return;
+  const root = document.querySelector(".parking-dest-dropdown");
+  const sel = document.getElementById("parkingDestinationSelect");
+  const trigger = document.getElementById("parkingDestinationTrigger");
+  const panel = document.getElementById("parkingDestinationPanel");
+  if (!root || !sel || !trigger || !panel) return;
+  parkingDestinationSelectDelegated = true;
+
+  sel.addEventListener("change", applyParkingDestinationFromSelectChange);
+
+  trigger.addEventListener("click", (e) => {
+    e.preventDefault();
+    toggleParkingDestinationPanel();
+  });
+
+  panel.addEventListener("click", (e) => {
+    const moreBtn = e.target.closest("#parkingDestMoreBtn");
+    if (moreBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      parkingDestShowHiddenChoices = true;
+      const keep = sel.value;
+      rebuildParkingDestinationSelectOptions(keep);
+      fillParkingDestinationPanel();
+      return;
+    }
+    const opt = e.target.closest("[data-dest-slug]");
+    if (!opt) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const slug = opt.getAttribute("data-dest-slug") || "";
+    if (!slug || ![...sel.options].some((o) => o.value === slug)) return;
+    sel.value = slug;
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!isParkingDestinationPanelOpen()) return;
+    const t = /** @type {Node|null} */ (e.target);
+    if (t && root.contains(t)) return;
+    closeParkingDestinationPanel();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (!isParkingDestinationPanelOpen()) return;
+    closeParkingDestinationPanel();
+    trigger.focus();
+  });
+}
+
+function syncParkingDestinationSelectAppearance() {
+  const sel = document.getElementById("parkingDestinationSelect");
+  const trigger = document.getElementById("parkingDestinationTrigger");
+  const label = document.getElementById("parkingDestinationTriggerLabel");
+  if (!sel) return;
+  const empty = sel.value === "";
+  const selectedOpt = empty
+    ? null
+    : [...sel.options].find((o) => o.value === sel.value);
+  const text = empty
+    ? PARKING_DESTINATION_PLACEHOLDER
+    : selectedOpt?.textContent || sel.value;
+  if (label) label.textContent = text;
+  if (trigger) {
+    if (empty) {
+      trigger.classList.remove("text-slate-900");
+      trigger.classList.add("text-slate-500");
+    } else {
+      trigger.classList.remove("text-slate-500");
+      trigger.classList.add("text-slate-900");
+    }
+  }
+  const chevron = document.getElementById("parkingDestChevron");
+  const resetBtn = document.getElementById("parkingResetBtn");
+  if (chevron) chevron.classList.toggle("hidden", !empty);
+  if (resetBtn) resetBtn.classList.toggle("hidden", empty);
+  fillParkingDestinationPanel();
+}
+
+/** Rebuild `<option>`s from {@link listParkingDestinationChoices}; preserves `selectedSlug` when valid. */
+function rebuildParkingDestinationSelectOptions(selectedSlug) {
+  const sel = document.getElementById("parkingDestinationSelect");
+  if (!sel) return;
+  const choices = listParkingDestinationChoices();
+  const keep =
+    typeof selectedSlug === "string" && selectedSlug.trim() !== ""
+      ? selectedSlug.trim()
+      : "";
+
   sel.innerHTML = "";
   const none = document.createElement("option");
   none.value = "";
@@ -1408,37 +1556,38 @@ function buildParkingDestinationSelect() {
   none.disabled = true;
   none.hidden = true;
   sel.appendChild(none);
-  for (const d of destinations) {
-    if (isDestinationHiddenFromPublicMaps(d)) continue;
-    const lat = d.latitude ?? d.location?.latitude;
-    const lng = d.longitude ?? d.location?.longitude;
-    if (typeof lat !== "number" || typeof lng !== "number") continue;
+
+  for (const c of choices) {
+    if (c.hidden && !parkingDestShowHiddenChoices && c.slug !== keep) {
+      continue;
+    }
     const opt = document.createElement("option");
-    opt.value = d.slug;
-    opt.textContent = d.name || d.slug;
+    opt.value = c.slug;
+    opt.textContent = c.name;
+    if (c.hidden && !parkingDestShowHiddenChoices) opt.hidden = true;
     sel.appendChild(opt);
   }
-  if (urlDest) {
-    const hiddenRec = appData?.destinations?.find(
-      (d) => d.slug === urlDest && isDestinationHiddenFromPublicMaps(d),
-    );
-    if (hiddenRec && ![...sel.options].some((o) => o.value === urlDest)) {
-      const lat = hiddenRec.latitude ?? hiddenRec.location?.latitude;
-      const lng = hiddenRec.longitude ?? hiddenRec.location?.longitude;
-      if (typeof lat === "number" && typeof lng === "number") {
-        const opt = document.createElement("option");
-        opt.value = hiddenRec.slug;
-        opt.textContent = hiddenRec.name || hiddenRec.slug;
-        opt.hidden = true;
-        sel.appendChild(opt);
-      }
-    }
-  }
-  if (urlDest && [...sel.options].some((o) => o.value === urlDest)) {
-    sel.value = urlDest;
+
+  if (keep && [...sel.options].some((o) => o.value === keep)) {
+    sel.value = keep;
   } else {
     sel.value = "";
   }
+}
+
+function buildParkingDestinationSelect() {
+  const sel = document.getElementById("parkingDestinationSelect");
+  if (!sel) return;
+  ensureParkingDestinationSelectDelegation();
+  const urlDest = parseParkingDestSlugFromHash();
+  const choices = listParkingDestinationChoices();
+  const urlIsHidden = !!(
+    urlDest && choices.some((c) => c.slug === urlDest && c.hidden)
+  );
+  if (urlIsHidden) parkingDestShowHiddenChoices = true;
+
+  rebuildParkingDestinationSelectOptions(urlDest || "");
+  closeParkingDestinationPanel();
   syncParkingDestinationSelectAppearance();
 }
 
