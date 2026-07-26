@@ -168,17 +168,38 @@
           class="hidden shrink-0 mb-2 flex flex-col gap-3 px-0 md:flex-row md:flex-nowrap md:items-center md:justify-center md:gap-x-5 md:px-5 lg:gap-x-10 xl:gap-x-12 lg:px-6"
         >
           <div
-            class="group relative w-full max-w-2xl min-w-0 shrink-0 md:w-auto md:min-w-[18rem] md:grow-0"
+            class="parking-dest-dropdown group relative w-full max-w-2xl min-w-0 shrink-0 md:w-auto md:min-w-[18rem] md:grow-0"
           >
             <select
               id="parkingDestinationSelect"
-              class="w-full min-w-0 cursor-pointer appearance-none rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-10 text-sm text-slate-900 shadow-sm transition-colors transition-shadow hover:border-slate-400 hover:bg-slate-50 hover:shadow focus:outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-slate-400 sm:pl-4"
-              aria-label="Where are you going?"
+              class="parking-dest-select-mirror"
+              tabindex="-1"
+              aria-hidden="true"
             >
               <option value="" disabled hidden selected>
                 Where are you going?
               </option>
             </select>
+            <button
+              type="button"
+              id="parkingDestinationTrigger"
+              class="parking-dest-trigger w-full min-w-0 cursor-pointer rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-10 text-left text-sm text-slate-500 shadow-sm transition-colors transition-shadow hover:border-slate-400 hover:bg-slate-50 hover:shadow focus:outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-slate-400 sm:pl-4"
+              aria-label="Where are you going?"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-controls="parkingDestinationPanel"
+            >
+              <span id="parkingDestinationTriggerLabel" class="block truncate"
+                >Where are you going?</span
+              >
+            </button>
+            <div
+              id="parkingDestinationPanel"
+              class="parking-dest-panel absolute left-0 right-0 top-full z-[1000] mt-1 hidden max-h-[min(24rem,70vh)] overflow-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+              role="listbox"
+              aria-label="Destinations"
+              hidden
+            ></div>
             <span
               id="parkingDestChevron"
               class="pointer-events-none absolute inset-y-px right-px flex w-9 items-center justify-center rounded-r-[0.4375rem] border-l border-slate-200 bg-slate-50 text-slate-600 transition-colors group-hover:bg-slate-100 group-hover:text-slate-700"

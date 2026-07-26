@@ -67,7 +67,7 @@ test.describe("Parking map (#/visit)", () => {
     expect(pathCount).toBeGreaterThan(15);
 
     await expect(page.locator("#parkingMapChrome")).toBeVisible();
-    await expect(page.locator("#parkingDestinationSelect")).toBeVisible();
+    await expect(page.locator("#parkingDestinationTrigger")).toBeVisible();
     await expect(
       page.locator('#parkingDestinationSelect option[value="van-andel-arena"]'),
     ).toBeAttached();
@@ -113,6 +113,49 @@ test.describe("Parking map (#/visit)", () => {
     await expect(
       page.locator('#parkingDestinationSelect option[value="amway-stadium"]'),
     ).toHaveCount(0);
+
+    await page.locator("#parkingDestinationTrigger").click();
+    await expect(page.locator("#parkingDestinationPanel")).toBeVisible();
+    await expect(
+      page.locator('#parkingDestinationPanel [data-dest-slug="the-big-room"]'),
+    ).toHaveCount(0);
+    await expect(page.locator("#parkingDestMoreBtn")).toBeVisible();
+
+    await page.locator("#parkingDestMoreBtn").click();
+    await expect(page.locator("#parkingDestMoreBtn")).toHaveCount(0);
+    await expect(
+      page.locator('#parkingDestinationPanel [data-dest-slug="the-big-room"]'),
+    ).toBeVisible();
+    await expect(
+      page.locator('#parkingDestinationPanel [data-dest-slug="amway-stadium"]'),
+    ).toBeVisible();
+    // Hidden venues stay below the divider, after the public list.
+    const orderOk = await page.evaluate(() => {
+      const panel = document.getElementById("parkingDestinationPanel");
+      const section = panel?.querySelector(".parking-dest-more-section");
+      if (!panel || !section) return false;
+      const firstPublic = panel.querySelector(
+        '[data-dest-slug="van-andel-arena"]',
+      );
+      const firstHidden = section.querySelector(
+        '[data-dest-slug="the-big-room"]',
+      );
+      return !!(
+        firstPublic &&
+        firstHidden &&
+        section.contains(firstHidden) &&
+        !section.contains(firstPublic) &&
+        firstPublic.compareDocumentPosition(section) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      );
+    });
+    expect(orderOk).toBe(true);
+    await expect(
+      page.locator('#parkingDestinationSelect option[value="the-big-room"]'),
+    ).toBeAttached();
+    await expect(
+      page.locator('#parkingDestinationSelect option[value="amway-stadium"]'),
+    ).toBeAttached();
 
     const hiddenFlagsOk = await page.evaluate(() => {
       const big = window.appData?.destinations?.find(
