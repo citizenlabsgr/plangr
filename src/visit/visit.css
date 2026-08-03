@@ -16,9 +16,13 @@ main.parking-map-active {
   overflow: hidden;
 }
 
-/* Options chrome stays natural height; map is the only flex-grow column. */
+/* Options chrome stays natural height; map is the only flex-grow column.
+ * Stack above Leaflet `.leaflet-top` / `.leaflet-control` (z-index 1000) so the
+ * destination listbox covers zoom +/- when it overflows onto the map. */
 #parkingMapChrome {
   flex: 0 0 auto;
+  position: relative;
+  z-index: 1100;
 }
 
 /* Grows to fill space between chrome and route panel (`#parkingView` is `flex flex-col` in HTML). */

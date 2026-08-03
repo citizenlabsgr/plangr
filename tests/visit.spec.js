@@ -335,6 +335,49 @@ test.describe("Parking map (#/visit)", () => {
   });
 
   test.describe("Destination select and inline reset", () => {
+    test("destination panel stacks above Leaflet zoom controls", async ({
+      page,
+    }) => {
+      // Narrow viewport: full-width dest dropdown overlaps map zoom (+/−).
+      await page.setViewportSize({ width: 500, height: 800 });
+      await page.goto("/#/visit");
+      await waitForParkingData(page);
+      await waitForParkingLeafletMap(page);
+
+      await page.locator("#parkingDestinationTrigger").click();
+      const panel = page.locator("#parkingDestinationPanel");
+      await expect(panel).toBeVisible();
+      await expect(
+        page.locator("#parkingAppMap .leaflet-control-zoom"),
+      ).toBeVisible();
+
+      const stacking = await page.evaluate(() => {
+        const panelEl = document.getElementById("parkingDestinationPanel");
+        const zoom = document.querySelector(
+          "#parkingAppMap .leaflet-control-zoom",
+        );
+        if (!panelEl || !zoom) return { ok: false, reason: "missing-els" };
+        const pr = panelEl.getBoundingClientRect();
+        const zr = zoom.getBoundingClientRect();
+        const left = Math.max(pr.left, zr.left);
+        const right = Math.min(pr.right, zr.right);
+        const top = Math.max(pr.top, zr.top);
+        const bottom = Math.min(pr.bottom, zr.bottom);
+        if (right - left < 2 || bottom - top < 2) {
+          return { ok: false, reason: "no-overlap" };
+        }
+        const hit = document.elementFromPoint(
+          (left + right) / 2,
+          (top + bottom) / 2,
+        );
+        return {
+          ok: !!(hit && panelEl.contains(hit)),
+          reason: hit ? hit.id || hit.className || hit.tagName : "null",
+        };
+      });
+      expect(stacking).toEqual(expect.objectContaining({ ok: true }));
+    });
+
     test("shows chevron affordance when empty and hides inline reset", async ({
       page,
     }) => {
