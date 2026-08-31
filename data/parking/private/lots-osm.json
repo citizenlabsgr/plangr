@@ -1930,6 +1930,14 @@
     {
       "name": "Unknown",
       "location": {
+        "latitude": 42.97723,
+        "longitude": -85.649018
+      },
+      "availability": "OSM way/1549216479"
+    },
+    {
+      "name": "Unknown",
+      "location": {
         "latitude": 42.977263,
         "longitude": -85.684394
       },

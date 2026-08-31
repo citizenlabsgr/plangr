@@ -51,11 +51,11 @@
       "owner": "Ellis",
       "name": "90 Market",
       "address": "Grand Rapids, MI",
-      "availability": "Grand Rapids; 180 spaces; Monthly from $220; Overnight Parking: &nbsp;$35.00 per 24 hour period &nbsp;No in/out p rivileges &nbsp; No Trailers allowed in the Lot Call for Monthly parking details 616-458-1179",
+      "availability": "Grand Rapids; 180 spaces; Monthly from $220; Overnight Parking: &nbsp;$40.00 per 24 hour period &nbsp;No in/out p rivileges &nbsp; No Trailers allowed in the Lot Call for Monthly parking details 616-458-1179",
       "pricing": {
-        "hourly": 6.0,
+        "hourly": 7.0,
         "evening": 30.0,
-        "daily": 27.0
+        "daily": 30.0
       }
     },
     {
@@ -83,9 +83,9 @@
       "address": "Grand Rapids, MI",
       "availability": "Grand Rapids; 650 spaces; Between Ottawa and Monroe",
       "pricing": {
-        "hourly": 6.0,
-        "evening": 15.0,
-        "daily": 27.0
+        "hourly": 7.0,
+        "evening": 20.0,
+        "daily": 30.0
       }
     },
     {
@@ -203,7 +203,7 @@
       "address": "120 Ottawa Ave SW, Grand Rapids, MI, 49503",
       "availability": "Grand Rapids; 933 spaces; Monthly from $185; 1st 4 hours of Movie Parking is free with a ticket purchase and validation form inside the Theater. This location has ChargePoint EV chargers in the Ramp. &nbsp; &nbsp; &nbsp;",
       "pricing": {
-        "hourly": 6.0,
+        "hourly": 7.0,
         "evening": 30.0,
         "daily": 30.0
       }

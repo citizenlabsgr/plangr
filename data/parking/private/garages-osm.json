@@ -94,6 +94,14 @@
     {
       "name": "Unknown",
       "location": {
+        "latitude": 42.96493,
+        "longitude": -85.684314
+      },
+      "availability": "Type: multi-storey; OSM way/1551191288"
+    },
+    {
+      "name": "Unknown",
+      "location": {
         "latitude": 42.965918,
         "longitude": -85.672978
       },
